@@ -98,9 +98,11 @@ export default function Home() {
                 <div className="flex-1 flex items-center justify-center p-8">
                   <div className="text-center">
                     <div className="mb-6">
-                      <svg className="w-20 h-20 mx-auto text-white/90" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
-                        <path d="M6.5 9h6v1h-6z"/>
+                      {/* Smart Filter Icon - Funnel with AI brain */}
+                      <svg className="w-20 h-20 lg:w-24 lg:h-24 mx-auto text-white/90" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M12 2C10.9 2 10 2.9 10 4s.9 2 2 2 2-.9 2-2-.9-2-2-2zm8 4H4c-.55 0-1 .45-1 1v1c0 2.84 1.28 5.38 3.3 7.08L7 17c0 .55.45 1 1 1h8c.55 0 1-.45 1-1l.7-1.92C19.72 13.38 21 10.84 21 8V7c0-.55-.45-1-1-1zm-4 4.5c0 .28-.22.5-.5.5s-.5-.22-.5-.5.22-.5.5-.5.5.22.5.5zm-2-2c0 .28-.22.5-.5.5s-.5-.22-.5-.5.22-.5.5-.5.5.22.5.5zm-4 2c0 .28-.22.5-.5.5S9 10.78 9 10.5s.22-.5.5-.5.5.22.5.5z"/>
+                        <circle cx="12" cy="4" r="1" fill="currentColor"/>
+                        <path d="M11 6h2v2h-2z" opacity="0.6"/>
                       </svg>
                     </div>
                   </div>
@@ -125,9 +127,11 @@ export default function Home() {
                 <div className="flex-1 flex items-center justify-center p-8">
                   <div className="text-center">
                     <div className="mb-6">
-                      <svg className="w-20 h-20 mx-auto text-white/90" fill="currentColor" viewBox="0 0 24 24">
+                      {/* Time Preferences Icon - Clock with preferences */}
+                      <svg className="w-20 h-20 lg:w-24 lg:h-24 mx-auto text-white/90" fill="currentColor" viewBox="0 0 24 24">
                         <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/>
                         <path d="M12.5 7H11v6l5.25 3.15.75-1.23-4.5-2.67z"/>
+                        <path d="M8 6c-.55 0-1 .45-1 1s.45 1 1 1 1-.45 1-1-.45-1-1-1zm8 0c-.55 0-1 .45-1 1s.45 1 1 1 1-.45 1-1-.45-1-1-1zm0 10c-.55 0-1 .45-1 1s.45 1 1 1 1-.45 1-1-.45-1-1-1z" opacity="0.6"/>
                       </svg>
                     </div>
                   </div>
@@ -152,11 +156,16 @@ export default function Home() {
                 <div className="flex-1 flex items-center justify-center p-8">
                   <div className="text-center">
                     <div className="mb-6">
-                      <svg className="w-20 h-20 mx-auto text-white/90" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-                        <circle cx="8" cy="8" r="2"/>
-                        <circle cx="16" cy="8" r="2"/>
-                        <circle cx="12" cy="16" r="2"/>
+                      {/* Multiple Options Icon - Grid with options */}
+                      <svg className="w-20 h-20 lg:w-24 lg:h-24 mx-auto text-white/90" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M4 6h4v4H4V6zm6 0h4v4h-4V6zm6 0h4v4h-4V6zM4 12h4v4H4v-4zm6 0h4v4h-4v-4zm6 0h4v4h-4v-4z"/>
+                        <circle cx="6" cy="8" r="1" fill="white" opacity="0.8"/>
+                        <circle cx="12" cy="8" r="1" fill="white" opacity="0.8"/>
+                        <circle cx="18" cy="8" r="1" fill="white" opacity="0.8"/>
+                        <circle cx="6" cy="14" r="1" fill="white" opacity="0.8"/>
+                        <circle cx="12" cy="14" r="1" fill="white" opacity="0.8"/>
+                        <circle cx="18" cy="14" r="1" fill="white" opacity="0.8"/>
+                        <path d="M4 18h16v2H4z" opacity="0.4"/>
                       </svg>
                     </div>
                   </div>
