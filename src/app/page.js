@@ -1,5 +1,3 @@
-import Image from "next/image";
-
 export default function Home() {
  return (
     <div className="min-h-screen">
@@ -98,10 +96,12 @@ export default function Home() {
                 <div className="flex-1 flex items-center justify-center p-8">
                   <div className="text-center">
                     <div className="mb-6">
-                      <svg className="w-20 h-20 mx-auto text-white/90" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
-                        <path d="M6.5 9h6v1h-6z"/>
-                      </svg>
+                      {/* Use Figma-imported asset for Smart-Filtering */}
+                      <img
+                        src="https://api.builder.io/api/v1/image/assets/TEMP/3aba81778dc8d1c8c5675e6bc79feb8019bb3a95?width=522"
+                        alt="Smart Filtering"
+                        className="w-28 h-28 lg:w-36 lg:h-36 mx-auto object-contain drop-shadow-xl"
+                      />
                     </div>
                   </div>
                 </div>
@@ -125,10 +125,12 @@ export default function Home() {
                 <div className="flex-1 flex items-center justify-center p-8">
                   <div className="text-center">
                     <div className="mb-6">
-                      <svg className="w-20 h-20 mx-auto text-white/90" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/>
-                        <path d="M12.5 7H11v6l5.25 3.15.75-1.23-4.5-2.67z"/>
-                      </svg>
+                      {/* Use Figma-imported asset for Time-Preferences */}
+                      <img
+                        src="https://api.builder.io/api/v1/image/assets/TEMP/2e05f22aebfd912d7072b4bd4fde237bf44fd34a?width=582"
+                        alt="Time Preferences"
+                        className="w-28 h-28 lg:w-36 lg:h-36 mx-auto object-contain drop-shadow-xl"
+                      />
                     </div>
                   </div>
                 </div>
@@ -152,12 +154,12 @@ export default function Home() {
                 <div className="flex-1 flex items-center justify-center p-8">
                   <div className="text-center">
                     <div className="mb-6">
-                      <svg className="w-20 h-20 mx-auto text-white/90" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-                        <circle cx="8" cy="8" r="2"/>
-                        <circle cx="16" cy="8" r="2"/>
-                        <circle cx="12" cy="16" r="2"/>
-                      </svg>
+                      {/* Use Figma-imported asset for Multiple Options */}
+                      <img
+                        src="https://api.builder.io/api/v1/image/assets/TEMP/6b3222f455c7a96aef7ad995d1f455ed6784192a?width=680"
+                        alt="Multiple Options"
+                        className="w-32 h-32 lg:w-40 lg:h-40 mx-auto object-contain drop-shadow-xl"
+                      />
                     </div>
                   </div>
                 </div>
