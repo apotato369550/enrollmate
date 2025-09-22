@@ -1,5 +1,3 @@
-import Image from "next/image";
-
 export default function Home() {
  return (
     <div className="min-h-screen">
@@ -98,12 +96,12 @@ export default function Home() {
                 <div className="flex-1 flex items-center justify-center p-8">
                   <div className="text-center">
                     <div className="mb-6">
-                      {/* Smart Filter Icon - Funnel with AI brain */}
-                      <svg className="w-20 h-20 lg:w-24 lg:h-24 mx-auto text-white/90" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M12 2C10.9 2 10 2.9 10 4s.9 2 2 2 2-.9 2-2-.9-2-2-2zm8 4H4c-.55 0-1 .45-1 1v1c0 2.84 1.28 5.38 3.3 7.08L7 17c0 .55.45 1 1 1h8c.55 0 1-.45 1-1l.7-1.92C19.72 13.38 21 10.84 21 8V7c0-.55-.45-1-1-1zm-4 4.5c0 .28-.22.5-.5.5s-.5-.22-.5-.5.22-.5.5-.5.5.22.5.5zm-2-2c0 .28-.22.5-.5.5s-.5-.22-.5-.5.22-.5.5-.5.5.22.5.5zm-4 2c0 .28-.22.5-.5.5S9 10.78 9 10.5s.22-.5.5-.5.5.22.5.5z"/>
-                        <circle cx="12" cy="4" r="1" fill="currentColor"/>
-                        <path d="M11 6h2v2h-2z" opacity="0.6"/>
-                      </svg>
+                      {/* Use Figma-imported asset for Smart-Filtering */}
+                      <img
+                        src="https://api.builder.io/api/v1/image/assets/TEMP/3aba81778dc8d1c8c5675e6bc79feb8019bb3a95?width=522"
+                        alt="Smart Filtering"
+                        className="w-28 h-28 lg:w-36 lg:h-36 mx-auto object-contain drop-shadow-xl"
+                      />
                     </div>
                   </div>
                 </div>
@@ -127,12 +125,12 @@ export default function Home() {
                 <div className="flex-1 flex items-center justify-center p-8">
                   <div className="text-center">
                     <div className="mb-6">
-                      {/* Time Preferences Icon - Clock with preferences */}
-                      <svg className="w-20 h-20 lg:w-24 lg:h-24 mx-auto text-white/90" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8z"/>
-                        <path d="M12.5 7H11v6l5.25 3.15.75-1.23-4.5-2.67z"/>
-                        <path d="M8 6c-.55 0-1 .45-1 1s.45 1 1 1 1-.45 1-1-.45-1-1-1zm8 0c-.55 0-1 .45-1 1s.45 1 1 1 1-.45 1-1-.45-1-1-1zm0 10c-.55 0-1 .45-1 1s.45 1 1 1 1-.45 1-1-.45-1-1-1z" opacity="0.6"/>
-                      </svg>
+                      {/* Use Figma-imported asset for Time-Preferences */}
+                      <img
+                        src="https://api.builder.io/api/v1/image/assets/TEMP/2e05f22aebfd912d7072b4bd4fde237bf44fd34a?width=582"
+                        alt="Time Preferences"
+                        className="w-28 h-28 lg:w-36 lg:h-36 mx-auto object-contain drop-shadow-xl"
+                      />
                     </div>
                   </div>
                 </div>
@@ -156,17 +154,12 @@ export default function Home() {
                 <div className="flex-1 flex items-center justify-center p-8">
                   <div className="text-center">
                     <div className="mb-6">
-                      {/* Multiple Options Icon - Grid with options */}
-                      <svg className="w-20 h-20 lg:w-24 lg:h-24 mx-auto text-white/90" fill="currentColor" viewBox="0 0 24 24">
-                        <path d="M4 6h4v4H4V6zm6 0h4v4h-4V6zm6 0h4v4h-4V6zM4 12h4v4H4v-4zm6 0h4v4h-4v-4zm6 0h4v4h-4v-4z"/>
-                        <circle cx="6" cy="8" r="1" fill="white" opacity="0.8"/>
-                        <circle cx="12" cy="8" r="1" fill="white" opacity="0.8"/>
-                        <circle cx="18" cy="8" r="1" fill="white" opacity="0.8"/>
-                        <circle cx="6" cy="14" r="1" fill="white" opacity="0.8"/>
-                        <circle cx="12" cy="14" r="1" fill="white" opacity="0.8"/>
-                        <circle cx="18" cy="14" r="1" fill="white" opacity="0.8"/>
-                        <path d="M4 18h16v2H4z" opacity="0.4"/>
-                      </svg>
+                      {/* Use Figma-imported asset for Multiple Options */}
+                      <img
+                        src="https://api.builder.io/api/v1/image/assets/TEMP/6b3222f455c7a96aef7ad995d1f455ed6784192a?width=680"
+                        alt="Multiple Options"
+                        className="w-32 h-32 lg:w-40 lg:h-40 mx-auto object-contain drop-shadow-xl"
+                      />
                     </div>
                   </div>
                 </div>
