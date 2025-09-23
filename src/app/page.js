@@ -15,12 +15,18 @@ export default function Home() {
           
           {/* Navigation */}
           <nav className="flex items-center space-x-4 sm:space-x-6 md:space-x-8">
-            <button className="text-white font-jakarta font-bold text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl drop-shadow-lg hover:text-white/90 transition-colors">
+            <a
+              href="/login"
+              className="text-white font-jakarta font-bold text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl drop-shadow-lg hover:text-white/90 transition-colors"
+            >
               Login
-            </button>
-            <button className="text-white font-jakarta font-bold text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl drop-shadow-lg hover:text-white/90 transition-colors">
+            </a>
+            <a
+              href="/signup"
+              className="text-white font-jakarta font-bold text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl drop-shadow-lg hover:text-white/90 transition-colors"
+            >
               Signup
-            </button>
+            </a>
           </nav>
         </div>
       </header>
