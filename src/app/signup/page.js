@@ -118,22 +118,22 @@ export default function SignupPage() {
       {/* Main content */}
       <div className="relative z-10 min-h-screen flex items-center justify-center p-4 py-8">
         <div className="w-full max-w-md">
-          {/* Logo */}
-          <div className="flex justify-center mb-6">
-            <img 
-              src="https://api.builder.io/api/v1/image/assets/TEMP/0ab06d5c74e85b8f2137cf321b9d07d9b7c27912?width=532"
-              alt="EnrollMate"
-              className="w-28 h-28 sm:w-32 sm:h-32"
-            />
-          </div>
-
           {/* Signup Card */}
-          <div 
+          <div
             className="bg-white rounded-[55px] p-6 sm:p-8 shadow-2xl border border-white"
             style={{
               boxShadow: '0 4px 4px 0 rgba(0, 0, 0, 0.25)'
             }}
           >
+            {/* Logo inside card (bigger) */}
+            <div className="flex justify-center mb-4">
+              <img
+                src="https://api.builder.io/api/v1/image/assets/TEMP/0ab06d5c74e85b8f2137cf321b9d07d9b7c27912?width=532"
+                alt="EnrollMate"
+                className="w-40 h-40 sm:w-48 sm:h-48"
+              />
+            </div>
+
             {/* Title */}
             <h1 className="text-[#2B2B2B] font-jakarta font-bold text-3xl sm:text-4xl mb-6 text-center">
               Sign up
