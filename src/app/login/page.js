@@ -86,14 +86,23 @@ export default function LoginPage() {
           </div>
 
           {/* Login Card */}
-          <div 
+          <div
             className="bg-white rounded-[55px] p-8 sm:p-12 shadow-2xl border border-white"
             style={{
               boxShadow: '0 4px 4px 0 rgba(0, 0, 0, 0.25)'
             }}
           >
+            {/* Logo inside card (bigger) */}
+            <div className="flex justify-center mb-6">
+              <img
+                src="https://api.builder.io/api/v1/image/assets/TEMP/0ab06d5c74e85b8f2137cf321b9d07d9b7c27912?width=532"
+                alt="EnrollMate"
+                className="w-40 h-40 sm:w-52 sm:h-52"
+              />
+            </div>
+
             {/* Title */}
-            <h1 className="text-[#2B2B2B] font-jakarta font-bold text-4xl sm:text-5xl mb-8 text-center">
+            <h1 className="text-[#2B2B2B] font-jakarta font-bold text-4xl sm:text-5xl mb-6 text-center">
               Log in
             </h1>
 
