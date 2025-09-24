@@ -76,14 +76,6 @@ export default function LoginPage() {
       {/* Main content */}
       <div className="relative z-10 min-h-screen flex items-center justify-center p-4">
         <div className="w-full max-w-md">
-          {/* Logo */}
-          <div className="flex justify-center mb-8">
-            <img 
-              src="https://api.builder.io/api/v1/image/assets/TEMP/0ab06d5c74e85b8f2137cf321b9d07d9b7c27912?width=532"
-              alt="EnrollMate"
-              className="w-32 h-32 sm:w-40 sm:h-40"
-            />
-          </div>
 
           {/* Login Card */}
           <div
