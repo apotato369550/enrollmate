@@ -76,6 +76,7 @@ export default function LoginPage() {
       {/* Main content */}
       <div className="relative z-10 min-h-screen flex items-center justify-center p-4">
         <div className="w-full max-w-md">
+          <div className="flex justify-center mb-8" />
 
           {/* Login Card */}
           <div
