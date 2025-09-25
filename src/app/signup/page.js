@@ -96,7 +96,7 @@ export default function SignupPage() {
       {/* Main content */}
       <div className="relative z-10 min-h-screen flex items-center justify-center p-4 py-10">
         <div className="w-full max-w-2xl">
-          <div className="flex justify-center relative z-20 -mb-8">
+          <div className="flex justify-center relative z-20 -mb-14 sm:-mb-20">
             <div className="rounded-full p-3 bg-white/95 border-4 border-[#9DF313] inline-flex items-center justify-center shadow-md">
               <img
                 src="https://api.builder.io/api/v1/image/assets/TEMP/0ab06d5c74e85b8f2137cf321b9d07d9b7c27912?width=532"
@@ -106,7 +106,7 @@ export default function SignupPage() {
             </div>
           </div>
           {/* Card */}
-          <div className="relative z-10 mt-6 bg-white/95 backdrop-blur rounded-3xl p-8 sm:p-12 shadow-xl border border-white/60">
+          <div className="relative z-10 mt-10 sm:mt-12 bg-white/95 backdrop-blur rounded-3xl p-8 sm:p-12 shadow-xl border border-white/60">
 
             {/* Title */}
             <h1 className="text-[#1f2937] font-jakarta font-semibold tracking-tight text-3xl sm:text-4xl mb-6 text-center">
