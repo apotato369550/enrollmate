@@ -76,17 +76,17 @@ export default function LoginPage() {
       {/* Main content */}
       <div className="relative z-10 min-h-screen flex items-center justify-center p-4">
         <div className="w-full max-w-md">
-          <div className="flex justify-center -mb-8">
+          <div className="flex justify-center relative z-20 -mb-8">
             <div className="rounded-full p-3 bg-white/95 border-4 border-[#9DF313] inline-flex items-center justify-center shadow-md">
               <img
                 src="https://api.builder.io/api/v1/image/assets/TEMP/0ab06d5c74e85b8f2137cf321b9d07d9b7c27912?width=532"
                 alt="EnrollMate"
-                className="w-40 h-40 sm:w-56 sm:h-56 object-contain"
+                className="w-28 h-28 sm:w-36 sm:h-36 object-contain"
               />
             </div>
           </div>
           {/* Card */}
-          <div className="bg-white/95 backdrop-blur rounded-3xl p-8 sm:p-10 shadow-xl border border-white/60">
+          <div className="relative z-10 mt-6 bg-white/95 backdrop-blur rounded-3xl p-8 sm:p-10 shadow-xl border border-white/60">
 
             {/* Title */}
             <h1 className="text-[#1f2937] font-jakarta font-semibold tracking-tight text-3xl sm:text-4xl mb-6 text-center">
