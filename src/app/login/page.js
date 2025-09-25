@@ -7,22 +7,24 @@ export default function LoginPage() {
   const [formData, setFormData] = useState({
     email: '',
     password: '',
-    rememberPassword: false
+    rememberPassword: false,
   });
   const [errors, setErrors] = useState({});
 
+  const inputClasses =
+    'w-full h-12 px-4 rounded-2xl border border-gray-200 bg-white/90 text-[#2B2B2B] placeholder:text-gray-400 outline-none shadow-sm focus:ring-2 focus:ring-[#9DF313]/60 focus:border-[#9DF313] transition';
+
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: type === 'checkbox' ? checked : value
+      [name]: type === 'checkbox' ? checked : value,
     }));
-    
-    // Clear error when user starts typing
+
     if (errors[name]) {
-      setErrors(prev => ({
+      setErrors((prev) => ({
         ...prev,
-        [name]: ''
+        [name]: '',
       }));
     }
   };
@@ -30,14 +32,12 @@ export default function LoginPage() {
   const validateForm = () => {
     const newErrors = {};
 
-    // Email validation
     if (!formData.email.trim()) {
       newErrors.email = 'Email is required';
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
       newErrors.email = 'Please enter a valid email address';
     }
 
-    // Password validation
     if (!formData.password.trim()) {
       newErrors.password = 'Password is required';
     } else if (formData.password.length < 6) {
@@ -51,7 +51,6 @@ export default function LoginPage() {
   const handleSubmit = (e) => {
     e.preventDefault();
     if (validateForm()) {
-      // Handle login submission here
       console.log('Login form submitted:', formData);
       alert('Login functionality would be implemented here');
     }
@@ -61,119 +60,99 @@ export default function LoginPage() {
     <div className="min-h-screen relative overflow-hidden">
       {/* Background with gradient */}
       <div className="absolute inset-0 bg-gradient-to-br from-enrollmate-bg-start to-enrollmate-bg-end" />
-      
+
       {/* Diamond decoration background */}
-      <div 
+      <div
         className="absolute inset-0 opacity-56"
         style={{
-          backgroundImage: `url('https://api.builder.io/api/v1/image/assets/TEMP/064bbd9f6db011ffd5c822938c930fa2370a9b77?width=5170')`,
+          backgroundImage:
+            "url('https://api.builder.io/api/v1/image/assets/TEMP/064bbd9f6db011ffd5c822938c930fa2370a9b77?width=5170')",
           backgroundSize: 'cover',
           backgroundPosition: 'center',
-          backgroundRepeat: 'no-repeat'
+          backgroundRepeat: 'no-repeat',
         }}
       />
 
       {/* Main content */}
       <div className="relative z-10 min-h-screen flex items-center justify-center p-4">
         <div className="w-full max-w-md">
-          <div className="flex justify-center mb-8" />
-
-          {/* Login Card */}
-          <div
-            className="bg-white rounded-[55px] p-8 sm:p-12 shadow-2xl border border-white"
-            style={{
-              boxShadow: '0 4px 4px 0 rgba(0, 0, 0, 0.25)'
-            }}
-          >
-            {/* Logo inside card (bigger) */}
-            <div className="flex justify-center mb-6">
+          {/* Card */}
+          <div className="bg-white/95 backdrop-blur rounded-3xl p-8 sm:p-10 shadow-xl border border-white/60">
+            {/* Logo */}
+            <div className="flex justify-center mb-4">
               <img
                 src="https://api.builder.io/api/v1/image/assets/TEMP/0ab06d5c74e85b8f2137cf321b9d07d9b7c27912?width=532"
                 alt="EnrollMate"
-                className="w-40 h-40 sm:w-52 sm:h-52"
+                className="w-28 h-28 sm:w-32 sm:h-32"
               />
             </div>
 
             {/* Title */}
-            <h1 className="text-[#2B2B2B] font-jakarta font-bold text-4xl sm:text-5xl mb-6 text-center">
+            <h1 className="text-[#1f2937] font-jakarta font-semibold tracking-tight text-3xl sm:text-4xl mb-6 text-center">
               Log in
             </h1>
 
-            {/* Form */}
-            <form onSubmit={handleSubmit} className="space-y-6">
-              {/* Email Field */}
-              <div className="relative">
-                <div className="flex">
-                  <div className="w-12 h-14 bg-[#9DF313] rounded-l-xl flex items-center justify-center">
-                    <svg width="24" height="20" viewBox="0 0 34 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M5.66659 26.6666C4.88742 26.6666 4.2204 26.4055 3.66554 25.8833C3.11068 25.361 2.83325 24.7333 2.83325 23.9999V7.99992C2.83325 7.26659 3.11068 6.63881 3.66554 6.11659C4.2204 5.59436 4.88742 5.33325 5.66659 5.33325H28.3333C29.1124 5.33325 29.7794 5.59436 30.3343 6.11659C30.8892 6.63881 31.1666 7.26659 31.1666 7.99992V23.9999C31.1666 24.7333 30.8892 25.361 30.3343 25.8833C29.7794 26.4055 29.1124 26.6666 28.3333 26.6666H5.66659ZM16.9999 17.3333L5.66659 10.6666V23.9999H28.3333V10.6666L16.9999 17.3333ZM16.9999 14.6666L28.3333 7.99992H5.66659L16.9999 14.6666ZM5.66659 10.6666V7.99992V23.9999V10.6666Z" fill="white"/>
-                    </svg>
-                  </div>
-                  <input
-                    type="email"
-                    name="email"
-                    value={formData.email}
-                    onChange={handleInputChange}
-                    placeholder="Email"
-                    className="flex-1 h-14 px-4 border-4 border-[#9DF313] rounded-r-xl rounded-l-none outline-none text-[#2B2B2B] font-jakarta font-bold text-lg placeholder-[#A2A2A2]"
-                  />
-                </div>
-                {errors.email && (
-                  <p className="text-red-500 text-sm mt-1 ml-2">{errors.email}</p>
-                )}
-              </div>
-
-              {/* Password Field */}
-              <div className="relative">
-                <div className="flex">
-                  <div className="w-12 h-14 bg-[#9DF313] rounded-l-xl"></div>
-                  <input
-                    type="password"
-                    name="password"
-                    value={formData.password}
-                    onChange={handleInputChange}
-                    placeholder="Password"
-                    className="flex-1 h-14 px-4 border-4 border-[#9DF313] rounded-r-xl rounded-l-none outline-none text-[#2B2B2B] font-jakarta font-bold text-lg placeholder-[#A2A2A2]"
-                  />
-                </div>
-                {errors.password && (
-                  <p className="text-red-500 text-sm mt-1 ml-2">{errors.password}</p>
-                )}
-              </div>
-
-              {/* Remember Password */}
-              <div className="flex items-center space-x-3 mt-4">
+            <form onSubmit={handleSubmit} className="space-y-5">
+              {/* Email */}
+              <div>
                 <input
+                  type="email"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleInputChange}
+                  placeholder="Email"
+                  className={inputClasses}
+                />
+                {errors.email && (
+                  <p className="text-red-500 text-sm mt-1 ml-1">{errors.email}</p>
+                )}
+              </div>
+
+              {/* Password */}
+              <div>
+                <input
+                  type="password"
+                  name="password"
+                  value={formData.password}
+                  onChange={handleInputChange}
+                  placeholder="Password"
+                  className={inputClasses}
+                />
+                {errors.password && (
+                  <p className="text-red-500 text-sm mt-1 ml-1">{errors.password}</p>
+                )}
+              </div>
+
+              {/* Remember */}
+              <div className="flex items-center gap-3">
+                <input
+                  id="remember"
                   type="checkbox"
                   name="rememberPassword"
                   checked={formData.rememberPassword}
                   onChange={handleInputChange}
-                  className="w-4 h-4 border border-[#9DF313] rounded"
+                  className="h-4 w-4 rounded border-gray-300 text-[#7CB342] focus:ring-[#9DF313] accent-[#9DF313]"
                 />
-                <label className="text-[#2B2B2B] font-jakarta font-bold text-sm">
-                  Remember Password
+                <label htmlFor="remember" className="text-[#374151] font-jakarta text-sm">
+                  Remember password
                 </label>
               </div>
 
-              {/* Submit Button */}
-              <div className="pt-4">
-                <button
-                  type="submit"
-                  className="w-full bg-gradient-to-r from-[#9DF313] to-[#7CB342] text-white font-jakarta font-bold text-xl py-3 rounded-xl hover:shadow-lg transition-all duration-200 transform hover:scale-105"
-                >
-                  Log in
-                </button>
-              </div>
+              {/* Submit */}
+              <button
+                type="submit"
+                className="w-full bg-gradient-to-r from-[#9DF313] to-[#7CB342] text-white font-jakarta font-medium text-lg py-3 rounded-2xl shadow-sm hover:shadow-lg transition duration-200"
+              >
+                Log in
+              </button>
 
-              {/* Sign up Link */}
-              <div className="text-center pt-4">
-                <p className="text-[#2B2B2B] font-jakarta font-bold text-sm">
-                  Don't have an account?{' '}
-                  <Link href="/signup" className="text-[#0400FF] hover:underline">
-                    Sign up
-                  </Link>
-                </p>
-              </div>
+              {/* Link */}
+              <p className="text-center text-[#374151] font-jakarta text-sm pt-1">
+                Don't have an account?{' '}
+                <Link href="/signup" className="text-[#0ea5e9] hover:underline">
+                  Sign up
+                </Link>
+              </p>
             </form>
           </div>
         </div>
