@@ -93,38 +93,56 @@ export default function Dashboard() {
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8 mb-8 lg:mb-12">
           {/* Total Schedules Created */}
-          <div className="bg-white rounded-3xl lg:rounded-[38px] p-6 lg:p-8 shadow-xl transform hover:scale-105 transition-all duration-300">
-            <h3 className="text-[#2B2B2B] font-jakarta font-bold text-xl sm:text-2xl lg:text-3xl text-center mb-4">
-              Total Schedules Created
-            </h3>
+          <div className="bg-white rounded-3xl lg:rounded-[38px] p-6 lg:p-8 shadow-xl transform hover:scale-105 hover:shadow-2xl transition-all duration-300 cursor-pointer group">
             <div className="text-center">
+              <div className="mb-3">
+                <svg className="w-12 h-12 text-enrollmate-green mx-auto group-hover:scale-110 transition-transform duration-300" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M19 3H5C3.9 3 3 3.9 3 5V19C3 20.1 3.9 21 5 21H19C20.1 21 21 20.1 21 19V5C21 3.9 20.1 3 19 3ZM19 19H5V8H19V19ZM7 10H9V12H7V10ZM11 10H13V12H11V10ZM15 10H17V12H15V10ZM7 14H9V16H7V14ZM11 14H13V16H11V14ZM15 14H17V16H15V14Z"/>
+                </svg>
+              </div>
+              <h3 className="text-[#2B2B2B] font-jakarta font-bold text-lg sm:text-xl lg:text-2xl mb-2">
+                Total Schedules Created
+              </h3>
               <span className="text-enrollmate-green font-jakarta font-bold text-3xl sm:text-4xl lg:text-5xl">
                 12
               </span>
+              <p className="text-[#767676] font-jakarta text-sm mt-2">+2 this month</p>
             </div>
           </div>
 
           {/* Active Schedules */}
-          <div className="bg-white rounded-3xl lg:rounded-[38px] p-6 lg:p-8 shadow-xl transform hover:scale-105 transition-all duration-300">
-            <h3 className="text-[#2B2B2B] font-jakarta font-bold text-xl sm:text-2xl lg:text-3xl text-center mb-4">
-              Active Schedules
-            </h3>
+          <div className="bg-white rounded-3xl lg:rounded-[38px] p-6 lg:p-8 shadow-xl transform hover:scale-105 hover:shadow-2xl transition-all duration-300 cursor-pointer group">
             <div className="text-center">
+              <div className="mb-3">
+                <svg className="w-12 h-12 text-enrollmate-green mx-auto group-hover:scale-110 transition-transform duration-300" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M12 2C6.48 2 2 6.48 2 12S6.48 22 12 22 22 17.52 22 12 17.52 2 12 2ZM13 17H11V15H13V17ZM13 13H11V7H13V13Z"/>
+                </svg>
+              </div>
+              <h3 className="text-[#2B2B2B] font-jakarta font-bold text-lg sm:text-xl lg:text-2xl mb-2">
+                Active Schedules
+              </h3>
               <span className="text-enrollmate-green font-jakarta font-bold text-3xl sm:text-4xl lg:text-5xl">
                 3
               </span>
+              <p className="text-[#767676] font-jakarta text-sm mt-2">Currently in use</p>
             </div>
           </div>
 
           {/* Last Updated */}
-          <div className="bg-white rounded-3xl lg:rounded-[38px] p-6 lg:p-8 shadow-xl transform hover:scale-105 transition-all duration-300">
-            <h3 className="text-[#2B2B2B] font-jakarta font-bold text-xl sm:text-2xl lg:text-3xl text-center mb-4">
-              Last Updated
-            </h3>
+          <div className="bg-white rounded-3xl lg:rounded-[38px] p-6 lg:p-8 shadow-xl transform hover:scale-105 hover:shadow-2xl transition-all duration-300 cursor-pointer group">
             <div className="text-center">
-              <span className="text-[#767676] font-jakarta font-medium text-lg sm:text-xl lg:text-2xl">
+              <div className="mb-3">
+                <svg className="w-12 h-12 text-enrollmate-green mx-auto group-hover:scale-110 transition-transform duration-300" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M12 2C6.48 2 2 6.48 2 12S6.48 22 12 22 22 17.52 22 12 17.52 2 12 2ZM13 17H11V11H13V17ZM13 9H11V7H13V9Z"/>
+                </svg>
+              </div>
+              <h3 className="text-[#2B2B2B] font-jakarta font-bold text-lg sm:text-xl lg:text-2xl mb-2">
+                Last Updated
+              </h3>
+              <span className="text-[#767676] font-jakarta font-medium text-xl sm:text-2xl lg:text-3xl">
                 2 hours ago
               </span>
+              <p className="text-[#767676] font-jakarta text-sm mt-2">Fall 2024 schedule</p>
             </div>
           </div>
         </div>
