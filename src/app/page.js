@@ -1,77 +1,15 @@
-'use client';
-
-import { useState, useEffect } from 'react';
-
-export default function Dashboard() {
-  const [showScheduleForm, setShowScheduleForm] = useState(false);
-  const [activeFilter, setActiveFilter] = useState('All');
-  const [formData, setFormData] = useState({
-    scheduleName: '',
-    schoolYear: '',
-    semester: '',
-    creationDate: '',
-    status: 'Active',
-    yearLevel: ''
-  });
-
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-  };
-
-  const recentActivities = [
-    { id: 1, activity: 'Schedule created successfully', date: '9/26/25 (Just Now)', status: 'Completed', type: 'Create' },
-    { id: 2, activity: 'CS101 class added to schedule', date: '9/25/25 (6hrs ago)', status: 'Pending', type: 'Update' },
-    { id: 3, activity: 'Math 101 time conflict resolved', date: '9/25/25 (6hrs ago)', status: 'Resolved', type: 'Fix' },
-    { id: 4, activity: 'Fall 2024 schedule published', date: '9/24/25 (1 day ago)', status: 'Completed', type: 'Publish' },
-    { id: 5, activity: 'Physics lab section changed', date: '9/23/25 (2 days ago)', status: 'Completed', type: 'Update' },
-  ];
-
-  const filterOptions = ['All', 'Completed', 'Pending', 'Resolved'];
-
-  const filteredActivities = activeFilter === 'All'
-    ? recentActivities
-    : recentActivities.filter(activity => activity.status === activeFilter);
-
-  const handleFormSubmit = (e) => {
-    e.preventDefault();
-    // Simulate form submission
-    alert('Schedule created successfully!');
-    setShowScheduleForm(false);
-    // Reset form
-    setFormData({
-      scheduleName: '',
-      schoolYear: '',
-      semester: '',
-      creationDate: '',
-      status: 'Active',
-      yearLevel: ''
-    });
-  };
-
-  // Handle escape key to close modal
-  useEffect(() => {
-    const handleEscape = (event) => {
-      if (event.key === 'Escape' && showScheduleForm) {
-        setShowScheduleForm(false);
-      }
-    };
-
-    document.addEventListener('keydown', handleEscape);
-    return () => document.removeEventListener('keydown', handleEscape);
-  }, [showScheduleForm]);
-
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-enrollmate-bg-start to-enrollmate-bg-end">
-      {/* Header */}
-      <header className="relative z-20 bg-gradient-to-r from-enrollmate-bg-start to-enrollmate-bg-end shadow-xl border-b border-black/5">
+export default function Home() {
+ return (
+    <div className="min-h-screen">
+      {/* Sticky Header */}
+      <header className="sticky top-0 z-50 bg-gradient-to-r from-enrollmate-bg-start to-enrollmate-bg-end shadow-lg">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 sm:h-24 flex items-center justify-between">
           {/* Logo */}
           <div className="flex items-center">
             <img 
               src="https://api.builder.io/api/v1/image/assets/TEMP/152290938133b46f59604e8cf4419542cb66556d?width=592"
               alt="EnrollMate"
-              className="h-12 sm:h-14 md:h-16 lg:h-18 w-auto opacity-90 drop-shadow-sm"
+              className="h-10 sm:h-12 md:h-14 lg:h-16 w-auto opacity-90 drop-shadow-sm"
             />
           </div>
           
@@ -79,13 +17,13 @@ export default function Dashboard() {
           <nav className="flex items-center space-x-4 sm:space-x-6 md:space-x-8">
             <a
               href="/login"
-              className="text-white font-jakarta font-bold text-lg sm:text-xl md:text-2xl lg:text-3xl drop-shadow-lg hover:text-white/90 transition-colors"
+              className="text-white font-jakarta font-bold text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl drop-shadow-lg hover:text-white/90 transition-colors"
             >
               Login
             </a>
             <a
               href="/signup"
-              className="text-white font-jakarta font-bold text-lg sm:text-xl md:text-2xl lg:text-3xl drop-shadow-lg hover:text-white/90 transition-colors"
+              className="text-white font-jakarta font-bold text-base sm:text-lg md:text-xl lg:text-2xl xl:text-3xl drop-shadow-lg hover:text-white/90 transition-colors"
             >
               Signup
             </a>
@@ -93,366 +31,205 @@ export default function Dashboard() {
         </div>
       </header>
 
-      {/* Main Dashboard Content */}
-      <main className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-12">
-        {/* Page Title */}
-        <div className="text-center mb-8 lg:mb-12">
-          <h1 className="text-white font-jakarta font-bold text-4xl sm:text-5xl md:text-6xl lg:text-7xl drop-shadow-lg">
-            My Schedules
-          </h1>
-        </div>
+      {/* Hero Section */}
+      <section className="relative min-h-screen">
+        {/* Background with gradient */}
+        <div
+          className="absolute inset-0 bg-gradient-to-br from-enrollmate-bg-start to-enrollmate-bg-end"
+        />
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8 mb-8 lg:mb-12">
-          {/* Total Schedules Created */}
-          <div className="bg-white rounded-3xl lg:rounded-[38px] p-6 lg:p-8 shadow-xl transform hover:scale-105 hover:shadow-2xl transition-all duration-300 cursor-pointer group">
-            <div className="text-center">
-              <div className="mb-3">
-                <svg className="w-12 h-12 text-enrollmate-green mx-auto group-hover:scale-110 transition-transform duration-300" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M19 3H5C3.9 3 3 3.9 3 5V19C3 20.1 3.9 21 5 21H19C20.1 21 21 20.1 21 19V5C21 3.9 20.1 3 19 3ZM19 19H5V8H19V19ZM7 10H9V12H7V10ZM11 10H13V12H11V10ZM15 10H17V12H15V10ZM7 14H9V16H7V14ZM11 14H13V16H11V14ZM15 14H17V16H15V14Z"/>
-                </svg>
-              </div>
-              <h3 className="text-[#2B2B2B] font-jakarta font-bold text-lg sm:text-xl lg:text-2xl mb-2">
-                Total Schedules Created
-              </h3>
-              <span className="text-enrollmate-green font-jakarta font-bold text-3xl sm:text-4xl lg:text-5xl">
-                12
-              </span>
-              <p className="text-[#767676] font-jakarta text-sm mt-2">+2 this month</p>
-            </div>
-          </div>
-
-          {/* Active Schedules */}
-          <div className="bg-white rounded-3xl lg:rounded-[38px] p-6 lg:p-8 shadow-xl transform hover:scale-105 hover:shadow-2xl transition-all duration-300 cursor-pointer group">
-            <div className="text-center">
-              <div className="mb-3">
-                <svg className="w-12 h-12 text-enrollmate-green mx-auto group-hover:scale-110 transition-transform duration-300" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M12 2C6.48 2 2 6.48 2 12S6.48 22 12 22 22 17.52 22 12 17.52 2 12 2ZM13 17H11V15H13V17ZM13 13H11V7H13V13Z"/>
-                </svg>
-              </div>
-              <h3 className="text-[#2B2B2B] font-jakarta font-bold text-lg sm:text-xl lg:text-2xl mb-2">
-                Active Schedules
-              </h3>
-              <span className="text-enrollmate-green font-jakarta font-bold text-3xl sm:text-4xl lg:text-5xl">
-                3
-              </span>
-              <p className="text-[#767676] font-jakarta text-sm mt-2">Currently in use</p>
-            </div>
-          </div>
-
-          {/* Last Updated */}
-          <div className="bg-white rounded-3xl lg:rounded-[38px] p-6 lg:p-8 shadow-xl transform hover:scale-105 hover:shadow-2xl transition-all duration-300 cursor-pointer group">
-            <div className="text-center">
-              <div className="mb-3">
-                <svg className="w-12 h-12 text-enrollmate-green mx-auto group-hover:scale-110 transition-transform duration-300" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M12 2C6.48 2 2 6.48 2 12S6.48 22 12 22 22 17.52 22 12 17.52 2 12 2ZM13 17H11V11H13V17ZM13 9H11V7H13V9Z"/>
-                </svg>
-              </div>
-              <h3 className="text-[#2B2B2B] font-jakarta font-bold text-lg sm:text-xl lg:text-2xl mb-2">
-                Last Updated
-              </h3>
-              <span className="text-[#767676] font-jakarta font-medium text-xl sm:text-2xl lg:text-3xl">
-                2 hours ago
-              </span>
-              <p className="text-[#767676] font-jakarta text-sm mt-2">Fall 2024 schedule</p>
-            </div>
-          </div>
-        </div>
-
-        {/* Create New Schedule Button */}
-        <div className="text-center mb-8 lg:mb-12">
-          <button
-            onClick={() => setShowScheduleForm(true)}
-            className="bg-enrollmate-green hover:bg-enrollmate-green/90 text-white font-jakarta font-bold text-xl sm:text-2xl lg:text-3xl px-8 sm:px-12 lg:px-16 py-3 sm:py-4 lg:py-5 rounded-xl drop-shadow-lg transform hover:scale-105 transition-all duration-300"
-          >
-            Create New Schedule
-          </button>
-        </div>
-
-        {/* Recent Activity Section */}
-        <div className="bg-white rounded-3xl lg:rounded-[38px] p-6 lg:p-8 shadow-xl">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 lg:mb-8">
-            <h2 className="text-[#2B2B2B] font-jakarta font-bold text-2xl sm:text-3xl lg:text-4xl mb-4 sm:mb-0">
-              Recent Activity
-            </h2>
-
-            {/* Filter Buttons */}
-            <div className="flex flex-wrap gap-2">
-              {filterOptions.map((filter) => (
-                <button
-                  key={filter}
-                  onClick={() => setActiveFilter(filter)}
-                  className={`px-4 py-2 rounded-lg font-jakarta font-medium text-sm transition-all duration-300 ${
-                    activeFilter === filter
-                      ? 'bg-enrollmate-green text-white shadow-md'
-                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                  }`}
-                >
-                  {filter}
+        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center min-h-[calc(100vh-5rem)] py-8 lg:py-16">
+            
+            {/* Left Content */}
+            <div className="text-center lg:text-left space-y-6 lg:space-y-8">
+              {/* Main Heading */}
+              <h1 className="text-white font-jakarta font-bold text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl leading-tight">
+                Never struggle with enrollment again
+              </h1>
+              
+              {/* Subheading */}
+              <p className="text-white font-jakarta text-lg sm:text-xl md:text-2xl lg:text-3xl xl:text-4xl font-normal leading-relaxed max-w-3xl mx-auto lg:mx-0">
+                Smart scheduling for irregular students - find viable schedule combinations instantly
+              </p>
+              
+              {/* CTA Button */}
+              <div className="pt-4 lg:pt-8">
+                <button className="bg-white hover:bg-gray-50 transition-colors duration-200 rounded-full border-4 sm:border-8 border-orange-50 px-8 sm:px-12 lg:px-16 py-3 sm:py-4 lg:py-5 shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-200">
+                  <span className="text-enrollmate-green font-jakarta font-bold text-xl sm:text-2xl lg:text-3xl xl:text-4xl">
+                    Getting Started
+                  </span>
                 </button>
-              ))}
+              </div>
+            </div>
+
+            {/* Right Content - Calendar Illustration */}
+            <div className="flex justify-center lg:justify-end">
+              <div className="relative">
+                <img 
+                  src="https://api.builder.io/api/v1/image/assets/TEMP/98ffc2bac3f2b04d98eef7d0401e4531df775981?width=1594"
+                  alt="Calendar with decorative elements"
+                  className="w-full max-w-md lg:max-w-lg xl:max-w-xl h-auto drop-shadow-2xl"
+                  style={{
+                    filter: 'drop-shadow(3px 4px 17.9px rgba(0, 0, 0, 0.25))'
+                  }}
+                />
+              </div>
             </div>
           </div>
-
-          {/* Activity Table */}
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="border-b-2 border-[#D9D9D9]">
-                <tr>
-                  <th className="text-left text-[#A2A2A2] font-jakarta font-bold text-lg sm:text-xl lg:text-2xl pb-4">
-                    Activity
-                  </th>
-                  <th className="text-left text-[#A2A2A2] font-jakarta font-bold text-lg sm:text-xl lg:text-2xl pb-4">
-                    Date
-                  </th>
-                  <th className="text-left text-[#A2A2A2] font-jakarta font-bold text-lg sm:text-xl lg:text-2xl pb-4">
-                    Status
-                  </th>
-                  <th className="text-left text-[#A2A2A2] font-jakarta font-bold text-lg sm:text-xl lg:text-2xl pb-4">
-                    Type
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredActivities.length > 0 ? filteredActivities.map((activity) => (
-                  <tr key={activity.id} className="border-b border-gray-100 last:border-b-0 hover:bg-gray-50 transition-colors duration-200">
-                    <td className="py-4 text-black font-jakarta text-base sm:text-lg lg:text-xl">
-                      {activity.activity}
-                    </td>
-                    <td className="py-4 text-[#767676] font-jakarta text-base sm:text-lg lg:text-xl">
-                      {activity.date}
-                    </td>
-                    <td className="py-4">
-                      <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-                        activity.status === 'Completed'
-                          ? 'bg-green-100 text-green-800'
-                          : activity.status === 'Pending'
-                          ? 'bg-yellow-100 text-yellow-800'
-                          : 'bg-blue-100 text-blue-800'
-                      }`}>
-                        {activity.status}
-                      </span>
-                    </td>
-                    <td className="py-4">
-                      <span className={`px-2 py-1 rounded text-xs font-medium ${
-                        activity.type === 'Create'
-                          ? 'bg-purple-100 text-purple-800'
-                          : activity.type === 'Update'
-                          ? 'bg-blue-100 text-blue-800'
-                          : activity.type === 'Fix'
-                          ? 'bg-orange-100 text-orange-800'
-                          : 'bg-gray-100 text-gray-800'
-                      }`}>
-                        {activity.type}
-                      </span>
-                    </td>
-                  </tr>
-                )) : (
-                  <tr>
-                    <td colSpan="4" className="py-8 text-center text-gray-500 font-jakarta">
-                      No activities found for the selected filter.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
         </div>
-      </main>
+      </section>
 
-      {/* Schedule Management Modal */}
-      {showScheduleForm && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-[#F8F8F8] rounded-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
-            <div className="p-6 lg:p-8">
-              {/* Header with back button */}
-              <div className="flex items-center mb-8">
-                <button
-                  onClick={() => setShowScheduleForm(false)}
-                  className="mr-6 p-3 bg-white rounded-full shadow-lg hover:shadow-xl transition-shadow"
-                >
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" className="text-black">
-                    <path d="M15 18L9 12L15 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
-                </button>
-                <h2 className="text-[#2B2B2B] font-jakarta font-bold text-3xl sm:text-4xl lg:text-5xl">
-                  Schedule Management
-                </h2>
-              </div>
+      {/* Features Section */}
+      <section className="relative py-16 lg:py-24">
+        {/* Background with gradient */}
+        <div
+          className="absolute inset-0 bg-gradient-to-br from-enrollmate-bg-start to-enrollmate-bg-end"
+        />
 
-              {/* Form */}
-              <form onSubmit={handleFormSubmit} className="space-y-6">
-                {/* Schedule Name */}
-                <div>
-                  <label className="block text-[#2B2B2B] font-jakarta font-bold text-xl lg:text-2xl mb-3">
-                    Schedule Name
-                  </label>
-                  <input
-                    type="text"
-                    name="scheduleName"
-                    value={formData.scheduleName}
-                    onChange={handleInputChange}
-                    className="w-full bg-white border border-gray-200 rounded-lg px-4 py-3 text-lg focus:outline-none focus:ring-2 focus:ring-enrollmate-green"
-                    placeholder="Enter schedule name"
-                  />
-                </div>
-
-                {/* School Year and Semester */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <label className="block text-[#2B2B2B] font-jakarta font-bold text-xl lg:text-2xl mb-3">
-                      School Year
-                    </label>
-                    <input
-                      type="text"
-                      name="schoolYear"
-                      value={formData.schoolYear}
-                      onChange={handleInputChange}
-                      className="w-full bg-white border border-gray-200 rounded-lg px-4 py-3 text-lg focus:outline-none focus:ring-2 focus:ring-enrollmate-green"
-                      placeholder="e.g., 2023-2024"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-[#2B2B2B] font-jakarta font-bold text-xl lg:text-2xl mb-3">
-                      Semester
-                    </label>
-                    <select
-                      name="semester"
-                      value={formData.semester}
-                      onChange={handleInputChange}
-                      className="w-full bg-white border border-gray-200 rounded-lg px-4 py-3 text-lg focus:outline-none focus:ring-2 focus:ring-enrollmate-green"
-                    >
-                      <option value="">Select Semester</option>
-                      <option value="1st">1st Semester</option>
-                      <option value="2nd">2nd Semester</option>
-                      <option value="Summer">Summer</option>
-                    </select>
+        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 lg:gap-12">
+            
+            {/* Smart-Filtering Card */}
+            <div className="group transform hover:scale-105 transition-all duration-300">
+              <div 
+                className="rounded-3xl lg:rounded-[45px] overflow-hidden shadow-2xl aspect-square flex flex-col"
+                style={{
+                  background: 'linear-gradient(135deg, #FF6B6B, #FF5252)',
+                  boxShadow: '-20px 40px 70.9px -1px rgba(255, 0, 0, 0.25)'
+                }}
+              >
+                <div className="flex-1 flex items-center justify-center p-8">
+                  <div className="text-center">
+                    <div className="mb-6">
+                      {/* Use Figma-imported asset for Smart-Filtering */}
+                      <img
+                        src="https://api.builder.io/api/v1/image/assets/TEMP/3aba81778dc8d1c8c5675e6bc79feb8019bb3a95?width=522"
+                        alt="Smart Filtering"
+                        className="w-28 h-28 lg:w-36 lg:h-36 mx-auto object-contain drop-shadow-xl"
+                      />
+                    </div>
                   </div>
                 </div>
-
-                {/* Creation Date */}
-                <div>
-                  <label className="block text-[#2B2B2B] font-jakarta font-bold text-xl lg:text-2xl mb-3">
-                    Creation Date
-                  </label>
-                  <div className="grid grid-cols-3 gap-3">
-                    <select className="bg-white border border-gray-200 rounded-lg px-3 py-3 text-lg focus:outline-none focus:ring-2 focus:ring-enrollmate-green">
-                      <option>MM</option>
-                      {Array.from({ length: 12 }, (_, i) => (
-                        <option key={i + 1} value={i + 1}>{String(i + 1).padStart(2, '0')}</option>
-                      ))}
-                    </select>
-                    <select className="bg-white border border-gray-200 rounded-lg px-3 py-3 text-lg focus:outline-none focus:ring-2 focus:ring-enrollmate-green">
-                      <option>DD</option>
-                      {Array.from({ length: 31 }, (_, i) => (
-                        <option key={i + 1} value={i + 1}>{String(i + 1).padStart(2, '0')}</option>
-                      ))}
-                    </select>
-                    <select className="bg-white border border-gray-200 rounded-lg px-3 py-3 text-lg focus:outline-none focus:ring-2 focus:ring-enrollmate-green">
-                      <option>YYYY</option>
-                      {Array.from({ length: 10 }, (_, i) => (
-                        <option key={2024 + i} value={2024 + i}>{2024 + i}</option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-
-                {/* Status and Year Level */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <label className="block text-[#2B2B2B] font-jakarta font-bold text-xl lg:text-2xl mb-3">
-                      Status
-                    </label>
-                    <select
-                      name="status"
-                      value={formData.status}
-                      onChange={handleInputChange}
-                      className="w-full bg-white border border-gray-200 rounded-lg px-4 py-3 text-lg focus:outline-none focus:ring-2 focus:ring-enrollmate-green"
-                    >
-                      <option value="Active">Active</option>
-                      <option value="Inactive">Inactive</option>
-                      <option value="Draft">Draft</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-[#2B2B2B] font-jakarta font-bold text-xl lg:text-2xl mb-3">
-                      Year Level
-                    </label>
-                    <select
-                      name="yearLevel"
-                      value={formData.yearLevel}
-                      onChange={handleInputChange}
-                      className="w-full bg-white border border-gray-200 rounded-lg px-4 py-3 text-lg focus:outline-none focus:ring-2 focus:ring-enrollmate-green"
-                    >
-                      <option value="">Select Year Level</option>
-                      <option value="1st Year">1st Year</option>
-                      <option value="2nd Year">2nd Year</option>
-                      <option value="3rd Year">3rd Year</option>
-                      <option value="4th Year">4th Year</option>
-                      <option value="5th Year">5th Year</option>
-                    </select>
-                  </div>
-                </div>
-
-                {/* Action Buttons */}
-                <div className="pt-6">
-                  <h3 className="text-[#2B2B2B] font-jakarta font-bold text-xl lg:text-2xl mb-4">
-                    Action
+                <div className="p-6 lg:p-8">
+                  <h3 className="text-white font-jakarta font-bold text-xl sm:text-2xl lg:text-3xl xl:text-4xl text-center">
+                    Smart-Filtering
                   </h3>
-                  <div className="flex flex-wrap gap-3">
-                    <button
-                      type="submit"
-                      className="bg-enrollmate-green hover:bg-enrollmate-green/90 text-white font-jakarta font-bold px-6 py-3 rounded-lg drop-shadow-lg transition-all duration-300 hover:scale-105"
-                    >
-                      Save
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => alert('Publish feature coming soon!')}
-                      className="bg-gray-400 hover:bg-gray-500 text-white font-jakarta font-bold px-6 py-3 rounded-lg drop-shadow-lg transition-all duration-300 opacity-40 hover:opacity-60"
-                    >
-                      Publish
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        if (window.confirm('Are you sure you want to delete this schedule?')) {
-                          alert('Schedule deleted!');
-                          setShowScheduleForm(false);
-                        }
-                      }}
-                      className="bg-red-500 hover:bg-red-600 text-white font-jakarta font-bold px-6 py-3 rounded-lg drop-shadow-lg transition-all duration-300 hover:scale-105"
-                    >
-                      Delete
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => alert('Edit mode activated!')}
-                      className="bg-blue-500 hover:bg-blue-600 text-white font-jakarta font-bold px-6 py-3 rounded-lg drop-shadow-lg transition-all duration-300 hover:scale-105"
-                    >
-                      Edit
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => alert('Schedule archived successfully!')}
-                      className="bg-purple-500 hover:bg-purple-600 text-white font-jakarta font-bold px-6 py-3 rounded-lg drop-shadow-lg transition-all duration-300 hover:scale-105"
-                    >
-                      Archive
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => alert('Schedule duplicated! Check your schedules list.')}
-                      className="bg-yellow-500 hover:bg-yellow-600 text-white font-jakarta font-bold px-6 py-3 rounded-lg drop-shadow-lg transition-all duration-300 hover:scale-105"
-                    >
-                      Duplicate
-                    </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Time-Preferences Card */}
+            <div className="group transform hover:scale-105 transition-all duration-300">
+              <div 
+                className="rounded-3xl lg:rounded-[45px] overflow-hidden shadow-2xl aspect-square flex flex-col"
+                style={{
+                  background: 'linear-gradient(135deg, #E94CF7, #C21FD6)',
+                  boxShadow: '-20px 40px 70.9px -1px rgba(252, 84, 255, 0.25)'
+                }}
+              >
+                <div className="flex-1 flex items-center justify-center p-8">
+                  <div className="text-center">
+                    <div className="mb-6">
+                      {/* Use Figma-imported asset for Time-Preferences */}
+                      <img
+                        src="https://api.builder.io/api/v1/image/assets/TEMP/2e05f22aebfd912d7072b4bd4fde237bf44fd34a?width=582"
+                        alt="Time Preferences"
+                        className="w-28 h-28 lg:w-36 lg:h-36 mx-auto object-contain drop-shadow-xl"
+                      />
+                    </div>
                   </div>
                 </div>
-              </form>
+                <div className="p-6 lg:p-8">
+                  <h3 className="text-white font-jakarta font-bold text-xl sm:text-2xl lg:text-3xl xl:text-4xl text-center">
+                    Time-Preferences
+                  </h3>
+                </div>
+              </div>
+            </div>
+
+            {/* Multiple Options Card */}
+            <div className="group transform hover:scale-105 transition-all duration-300 md:col-span-2 lg:col-span-1">
+              <div 
+                className="rounded-3xl lg:rounded-[45px] overflow-hidden shadow-2xl aspect-square flex flex-col"
+                style={{
+                  background: 'linear-gradient(135deg, #5FA9EC, #2196F3)',
+                  boxShadow: '-20px 40px 70.9px -1px rgba(87, 159, 236, 0.25)'
+                }}
+              >
+                <div className="flex-1 flex items-center justify-center p-8">
+                  <div className="text-center">
+                    <div className="mb-6">
+                      {/* Use Figma-imported asset for Multiple Options */}
+                      <img
+                        src="https://api.builder.io/api/v1/image/assets/TEMP/6b3222f455c7a96aef7ad995d1f455ed6784192a?width=680"
+                        alt="Multiple Options"
+                        className="w-32 h-32 lg:w-40 lg:h-40 mx-auto object-contain drop-shadow-xl"
+                      />
+                    </div>
+                  </div>
+                </div>
+                <div className="p-6 lg:p-8">
+                  <h3 className="text-white font-jakarta font-bold text-xl sm:text-2xl lg:text-3xl xl:text-4xl text-center">
+                    Multiple Options
+                  </h3>
+                </div>
+              </div>
             </div>
           </div>
         </div>
-      )}
+      </section>
+
+      {/* Footer */}
+      <footer className="relative">
+        {/* Footer bar with shadow */}
+        <div className="w-full bg-gradient-to-r from-enrollmate-bg-start to-enrollmate-bg-end shadow-lg">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-8">
+            <div className="flex flex-col lg:flex-row justify-between items-center space-y-6 lg:space-y-0">
+              
+              {/* Footer Links */}
+              <nav className="flex flex-wrap justify-center lg:justify-start items-center gap-4 sm:gap-6 lg:gap-8">
+                <a href="#" className="text-white font-jakarta font-bold text-lg sm:text-xl lg:text-2xl drop-shadow-lg hover:text-white/90 transition-colors">
+                  About
+                </a>
+                <a href="#" className="text-white font-jakarta font-bold text-lg sm:text-xl lg:text-2xl drop-shadow-lg hover:text-white/90 transition-colors">
+                  Contact
+                </a>
+                <a href="#" className="text-white font-jakarta font-bold text-lg sm:text-xl lg:text-2xl drop-shadow-lg hover:text-white/90 transition-colors">
+                  Privacy Policy
+                </a>
+                <a href="#" className="text-white font-jakarta font-bold text-lg sm:text-xl lg:text-2xl drop-shadow-lg hover:text-white/90 transition-colors">
+                  Confirmation Information
+                </a>
+              </nav>
+
+              {/* Social Icons */}
+              <div className="flex items-center space-x-4">
+                {/* Facebook */}
+                <a href="#" className="text-white hover:text-white/80 transition-colors">
+                  <svg className="w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+                  </svg>
+                </a>
+                
+                {/* GitHub */}
+                <a href="#" className="text-white hover:text-white/80 transition-colors">
+                  <svg className="w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+                  </svg>
+                </a>
+                
+                {/* Instagram */}
+                <a href="#" className="text-white hover:text-white/80 transition-colors">
+                  <svg className="w-8 h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
+                  </svg>
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }
