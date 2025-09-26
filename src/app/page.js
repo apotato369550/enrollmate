@@ -141,10 +141,29 @@ export default function Dashboard() {
 
         {/* Recent Activity Section */}
         <div className="bg-white rounded-3xl lg:rounded-[38px] p-6 lg:p-8 shadow-xl">
-          <h2 className="text-[#2B2B2B] font-jakarta font-bold text-2xl sm:text-3xl lg:text-4xl mb-6 lg:mb-8">
-            Recent Activity
-          </h2>
-          
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 lg:mb-8">
+            <h2 className="text-[#2B2B2B] font-jakarta font-bold text-2xl sm:text-3xl lg:text-4xl mb-4 sm:mb-0">
+              Recent Activity
+            </h2>
+
+            {/* Filter Buttons */}
+            <div className="flex flex-wrap gap-2">
+              {filterOptions.map((filter) => (
+                <button
+                  key={filter}
+                  onClick={() => setActiveFilter(filter)}
+                  className={`px-4 py-2 rounded-lg font-jakarta font-medium text-sm transition-all duration-300 ${
+                    activeFilter === filter
+                      ? 'bg-enrollmate-green text-white shadow-md'
+                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  }`}
+                >
+                  {filter}
+                </button>
+              ))}
+            </div>
+          </div>
+
           {/* Activity Table */}
           <div className="overflow-x-auto">
             <table className="w-full">
@@ -159,11 +178,14 @@ export default function Dashboard() {
                   <th className="text-left text-[#A2A2A2] font-jakarta font-bold text-lg sm:text-xl lg:text-2xl pb-4">
                     Status
                   </th>
+                  <th className="text-left text-[#A2A2A2] font-jakarta font-bold text-lg sm:text-xl lg:text-2xl pb-4">
+                    Type
+                  </th>
                 </tr>
               </thead>
               <tbody>
-                {recentActivities.map((activity, index) => (
-                  <tr key={index} className="border-b border-gray-100 last:border-b-0">
+                {filteredActivities.length > 0 ? filteredActivities.map((activity) => (
+                  <tr key={activity.id} className="border-b border-gray-100 last:border-b-0 hover:bg-gray-50 transition-colors duration-200">
                     <td className="py-4 text-black font-jakarta text-base sm:text-lg lg:text-xl">
                       {activity.activity}
                     </td>
@@ -172,7 +194,7 @@ export default function Dashboard() {
                     </td>
                     <td className="py-4">
                       <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-                        activity.status === 'Completed' 
+                        activity.status === 'Completed'
                           ? 'bg-green-100 text-green-800'
                           : activity.status === 'Pending'
                           ? 'bg-yellow-100 text-yellow-800'
@@ -181,8 +203,27 @@ export default function Dashboard() {
                         {activity.status}
                       </span>
                     </td>
+                    <td className="py-4">
+                      <span className={`px-2 py-1 rounded text-xs font-medium ${
+                        activity.type === 'Create'
+                          ? 'bg-purple-100 text-purple-800'
+                          : activity.type === 'Update'
+                          ? 'bg-blue-100 text-blue-800'
+                          : activity.type === 'Fix'
+                          ? 'bg-orange-100 text-orange-800'
+                          : 'bg-gray-100 text-gray-800'
+                      }`}>
+                        {activity.type}
+                      </span>
+                    </td>
                   </tr>
-                ))}
+                )) : (
+                  <tr>
+                    <td colSpan="4" className="py-8 text-center text-gray-500 font-jakarta">
+                      No activities found for the selected filter.
+                    </td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </div>
