@@ -49,6 +49,18 @@ export default function Dashboard() {
     });
   };
 
+  // Handle escape key to close modal
+  useEffect(() => {
+    const handleEscape = (event) => {
+      if (event.key === 'Escape' && showScheduleForm) {
+        setShowScheduleForm(false);
+      }
+    };
+
+    document.addEventListener('keydown', handleEscape);
+    return () => document.removeEventListener('keydown', handleEscape);
+  }, [showScheduleForm]);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-enrollmate-bg-start to-enrollmate-bg-end">
       {/* Header */}
