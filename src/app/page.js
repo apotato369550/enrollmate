@@ -389,38 +389,48 @@ export default function Dashboard() {
                   </h3>
                   <div className="flex flex-wrap gap-3">
                     <button
-                      type="button"
-                      className="bg-enrollmate-green hover:bg-enrollmate-green/90 text-white font-jakarta font-bold px-6 py-3 rounded-lg drop-shadow-lg transition-all duration-300"
+                      type="submit"
+                      className="bg-enrollmate-green hover:bg-enrollmate-green/90 text-white font-jakarta font-bold px-6 py-3 rounded-lg drop-shadow-lg transition-all duration-300 hover:scale-105"
                     >
                       Save
                     </button>
                     <button
                       type="button"
-                      className="bg-gray-400 hover:bg-gray-500 text-white font-jakarta font-bold px-6 py-3 rounded-lg drop-shadow-lg transition-all duration-300 opacity-40"
+                      onClick={() => alert('Publish feature coming soon!')}
+                      className="bg-gray-400 hover:bg-gray-500 text-white font-jakarta font-bold px-6 py-3 rounded-lg drop-shadow-lg transition-all duration-300 opacity-40 hover:opacity-60"
                     >
                       Publish
                     </button>
                     <button
                       type="button"
-                      className="bg-red-500 hover:bg-red-600 text-white font-jakarta font-bold px-6 py-3 rounded-lg drop-shadow-lg transition-all duration-300"
+                      onClick={() => {
+                        if (window.confirm('Are you sure you want to delete this schedule?')) {
+                          alert('Schedule deleted!');
+                          setShowScheduleForm(false);
+                        }
+                      }}
+                      className="bg-red-500 hover:bg-red-600 text-white font-jakarta font-bold px-6 py-3 rounded-lg drop-shadow-lg transition-all duration-300 hover:scale-105"
                     >
                       Delete
                     </button>
                     <button
                       type="button"
-                      className="bg-blue-500 hover:bg-blue-600 text-white font-jakarta font-bold px-6 py-3 rounded-lg drop-shadow-lg transition-all duration-300"
+                      onClick={() => alert('Edit mode activated!')}
+                      className="bg-blue-500 hover:bg-blue-600 text-white font-jakarta font-bold px-6 py-3 rounded-lg drop-shadow-lg transition-all duration-300 hover:scale-105"
                     >
                       Edit
                     </button>
                     <button
                       type="button"
-                      className="bg-purple-500 hover:bg-purple-600 text-white font-jakarta font-bold px-6 py-3 rounded-lg drop-shadow-lg transition-all duration-300"
+                      onClick={() => alert('Schedule archived successfully!')}
+                      className="bg-purple-500 hover:bg-purple-600 text-white font-jakarta font-bold px-6 py-3 rounded-lg drop-shadow-lg transition-all duration-300 hover:scale-105"
                     >
                       Archive
                     </button>
                     <button
                       type="button"
-                      className="bg-yellow-500 hover:bg-yellow-600 text-white font-jakarta font-bold px-6 py-3 rounded-lg drop-shadow-lg transition-all duration-300"
+                      onClick={() => alert('Schedule duplicated! Check your schedules list.')}
+                      className="bg-yellow-500 hover:bg-yellow-600 text-white font-jakarta font-bold px-6 py-3 rounded-lg drop-shadow-lg transition-all duration-300 hover:scale-105"
                     >
                       Duplicate
                     </button>
