@@ -52,7 +52,8 @@ export default function LoginPage() {
     e.preventDefault();
     if (validateForm()) {
       console.log('Login form submitted:', formData);
-      alert('Login functionality would be implemented here');
+      // Simulate successful login and redirect to dashboard
+      window.location.href = '/';
     }
   };
 
