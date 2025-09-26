@@ -251,7 +251,7 @@ export default function Dashboard() {
               </div>
 
               {/* Form */}
-              <form className="space-y-6">
+              <form onSubmit={handleFormSubmit} className="space-y-6">
                 {/* Schedule Name */}
                 <div>
                   <label className="block text-[#2B2B2B] font-jakarta font-bold text-xl lg:text-2xl mb-3">
