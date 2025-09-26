@@ -72,7 +72,8 @@ export default function SignupPage() {
     e.preventDefault();
     if (validateForm()) {
       console.log('Signup form submitted:', formData);
-      alert('Signup functionality would be implemented here');
+      // Simulate successful signup and redirect to dashboard
+      window.location.href = '/';
     }
   };
 
