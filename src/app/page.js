@@ -4,6 +4,7 @@ import { useState } from 'react';
 
 export default function Dashboard() {
   const [showScheduleForm, setShowScheduleForm] = useState(false);
+  const [activeFilter, setActiveFilter] = useState('All');
   const [formData, setFormData] = useState({
     scheduleName: '',
     schoolYear: '',
@@ -19,10 +20,34 @@ export default function Dashboard() {
   };
 
   const recentActivities = [
-    { activity: 'Schedule created successfully', date: '9/26/25 (Just Now)', status: 'Completed' },
-    { activity: 'CS101 class added to schedule', date: '9/25/25 (6hrs ago)', status: 'Pending' },
-    { activity: 'Math 101 time conflict resolved', date: '9/25/25 (6hrs ago)', status: 'Resolved' },
+    { id: 1, activity: 'Schedule created successfully', date: '9/26/25 (Just Now)', status: 'Completed', type: 'Create' },
+    { id: 2, activity: 'CS101 class added to schedule', date: '9/25/25 (6hrs ago)', status: 'Pending', type: 'Update' },
+    { id: 3, activity: 'Math 101 time conflict resolved', date: '9/25/25 (6hrs ago)', status: 'Resolved', type: 'Fix' },
+    { id: 4, activity: 'Fall 2024 schedule published', date: '9/24/25 (1 day ago)', status: 'Completed', type: 'Publish' },
+    { id: 5, activity: 'Physics lab section changed', date: '9/23/25 (2 days ago)', status: 'Completed', type: 'Update' },
   ];
+
+  const filterOptions = ['All', 'Completed', 'Pending', 'Resolved'];
+
+  const filteredActivities = activeFilter === 'All'
+    ? recentActivities
+    : recentActivities.filter(activity => activity.status === activeFilter);
+
+  const handleFormSubmit = (e) => {
+    e.preventDefault();
+    // Simulate form submission
+    alert('Schedule created successfully!');
+    setShowScheduleForm(false);
+    // Reset form
+    setFormData({
+      scheduleName: '',
+      schoolYear: '',
+      semester: '',
+      creationDate: '',
+      status: 'Active',
+      yearLevel: ''
+    });
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-enrollmate-bg-start to-enrollmate-bg-end">
