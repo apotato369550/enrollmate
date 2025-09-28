@@ -2,16 +2,22 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { supabase } from '../../lib/supabase';
+import { useRouter } from 'next/navigation';
 
 export default function SignupPage() {
   const [formData, setFormData] = useState({
-    fullName: '',
+    firstName: '',
+    lastName: '',
+    middleInitial: '',
     email: '',
     studentId: '',
     password: '',
     confirmPassword: '',
   });
   const [errors, setErrors] = useState({});
+  const [loading, setLoading] = useState(false);
+  const router = useRouter();
 
   const inputClasses =
     'w-full h-12 px-4 rounded-2xl border border-gray-200 bg-white/90 text-[#2B2B2B] placeholder:text-gray-400 outline-none shadow-sm focus:ring-2 focus:ring-[#9DF313]/60 focus:border-[#9DF313] transition';
@@ -34,10 +40,21 @@ export default function SignupPage() {
   const validateForm = () => {
     const newErrors = {};
 
-    if (!formData.fullName.trim()) {
-      newErrors.fullName = 'Full name is required';
-    } else if (formData.fullName.trim().length < 2) {
-      newErrors.fullName = 'Full name must be at least 2 characters';
+    if (!formData.firstName.trim()) {
+      newErrors.firstName = 'First name is required';
+    } else if (formData.firstName.trim().length < 2) {
+      newErrors.firstName = 'First name must be at least 2 characters';
+    }
+
+    if (!formData.lastName.trim()) {
+      newErrors.lastName = 'Last name is required';
+    } else if (formData.lastName.trim().length < 2) {
+      newErrors.lastName = 'Last name must be at least 2 characters';
+    }
+
+    // Middle initial is optional, but if provided, should be 1 character
+    if (formData.middleInitial.trim() && formData.middleInitial.trim().length !== 1) {
+      newErrors.middleInitial = 'Middle initial must be a single character';
     }
 
     if (!formData.email.trim()) {
@@ -68,12 +85,48 @@ export default function SignupPage() {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (validateForm()) {
-      console.log('Signup form submitted:', formData);
-      // Simulate successful signup and redirect to dashboard
-      window.location.href = '/';
+    if (!validateForm()) return;
+
+    setLoading(true);
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email: formData.email,
+        password: formData.password,
+      });
+
+      if (error) {
+        setErrors({ general: error.message });
+        return;
+      }
+
+      if (data.user) {
+        // Insert into profiles table
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .insert({
+            id: data.user.id,
+            first_name: formData.firstName,
+            last_name: formData.lastName,
+            middle_initial: formData.middleInitial || null,
+            student_id: formData.studentId,
+            usertype: 'student',
+          });
+
+        if (profileError) {
+          console.error('Profile insert error:', profileError);
+          setErrors({ general: 'Account created but profile setup failed. Please contact support.' });
+          return;
+        }
+
+        // Redirect to dashboard
+        router.push('/dashboard');
+      }
+    } catch (err) {
+      setErrors({ general: 'An unexpected error occurred. Please try again.' });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -115,19 +168,47 @@ export default function SignupPage() {
             </h1>
 
             <form onSubmit={handleSubmit} className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-              {/* Full Name */}
-              <div className="sm:col-span-2">
-                <input
-                  type="text"
-                  name="fullName"
-                  value={formData.fullName}
-                  onChange={handleInputChange}
-                  placeholder="Full name"
-                  className={inputClasses}
-                />
-                {errors.fullName && (
-                  <p className="text-red-500 text-sm mt-1 ml-1">{errors.fullName}</p>
-                )}
+              {/* Name Fields */}
+              <div className="sm:col-span-2 grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div>
+                  <input
+                    type="text"
+                    name="firstName"
+                    value={formData.firstName}
+                    onChange={handleInputChange}
+                    placeholder="First name"
+                    className={inputClasses}
+                  />
+                  {errors.firstName && (
+                    <p className="text-red-500 text-sm mt-1 ml-1">{errors.firstName}</p>
+                  )}
+                </div>
+                <div>
+                  <input
+                    type="text"
+                    name="middleInitial"
+                    value={formData.middleInitial}
+                    onChange={handleInputChange}
+                    placeholder="Middle initial (optional)"
+                    className={inputClasses}
+                  />
+                  {errors.middleInitial && (
+                    <p className="text-red-500 text-sm mt-1 ml-1">{errors.middleInitial}</p>
+                  )}
+                </div>
+                <div>
+                  <input
+                    type="text"
+                    name="lastName"
+                    value={formData.lastName}
+                    onChange={handleInputChange}
+                    placeholder="Last name"
+                    className={inputClasses}
+                  />
+                  {errors.lastName && (
+                    <p className="text-red-500 text-sm mt-1 ml-1">{errors.lastName}</p>
+                  )}
+                </div>
               </div>
 
               {/* Email */}
@@ -194,10 +275,14 @@ export default function SignupPage() {
               <div className="sm:col-span-2 pt-1">
                 <button
                   type="submit"
-                  className="w-full bg-gradient-to-r from-[#9DF313] to-[#7CB342] text-white font-jakarta font-medium text-lg py-3 rounded-2xl shadow-sm hover:shadow-lg transition duration-200"
+                  disabled={loading}
+                  className="w-full bg-gradient-to-r from-[#9DF313] to-[#7CB342] text-white font-jakarta font-medium text-lg py-3 rounded-2xl shadow-sm hover:shadow-lg transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Create account
+                  {loading ? 'Creating account...' : 'Create account'}
                 </button>
+                {errors.general && (
+                  <p className="text-red-500 text-sm mt-2 text-center">{errors.general}</p>
+                )}
               </div>
 
               {/* Login Link */}

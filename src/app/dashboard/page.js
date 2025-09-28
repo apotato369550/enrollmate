@@ -1,10 +1,16 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { supabase } from '../../lib/supabase';
+import { useRouter } from 'next/navigation';
 
 export default function Dashboard() {
   const [showScheduleForm, setShowScheduleForm] = useState(false);
   const [activeFilter, setActiveFilter] = useState('All');
+  const [user, setUser] = useState(null);
+  const [profile, setProfile] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const router = useRouter();
   const [formData, setFormData] = useState({
     scheduleName: '',
     schoolYear: '',
@@ -33,6 +39,11 @@ export default function Dashboard() {
     ? recentActivities 
     : recentActivities.filter(activity => activity.status === activeFilter);
 
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    router.push('/login');
+  };
+
   const handleFormSubmit = (e) => {
     e.preventDefault();
     // Simulate form submission
@@ -48,6 +59,24 @@ export default function Dashboard() {
       yearLevel: ''
     });
   };
+
+  // Fetch user and profile
+  useEffect(() => {
+    const getUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        setUser(user);
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', user.id)
+          .single();
+        setProfile(profile);
+      }
+      setLoading(false);
+    };
+    getUser();
+  }, []);
 
   // Handle escape key to close modal
   useEffect(() => {
@@ -75,20 +104,19 @@ export default function Dashboard() {
             />
           </div>
           
-          {/* Navigation */}
+          {/* User Info and Logout */}
           <nav className="flex items-center space-x-4 sm:space-x-6 md:space-x-8">
-            <a
-              href="/login"
+            {profile && (
+              <span className="text-white font-jakarta font-bold text-lg sm:text-xl md:text-2xl lg:text-3xl drop-shadow-lg">
+                Welcome, {profile.first_name} {profile.last_name}
+              </span>
+            )}
+            <button
+              onClick={handleLogout}
               className="text-white font-jakarta font-bold text-lg sm:text-xl md:text-2xl lg:text-3xl drop-shadow-lg hover:text-white/90 transition-colors"
             >
-              Login
-            </a>
-            <a
-              href="/signup"
-              className="text-white font-jakarta font-bold text-lg sm:text-xl md:text-2xl lg:text-3xl drop-shadow-lg hover:text-white/90 transition-colors"
-            >
-              Signup
-            </a>
+              Logout
+            </button>
           </nav>
         </div>
       </header>
