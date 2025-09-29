@@ -102,6 +102,19 @@ export default function SignupPage() {
       }
 
       if (data.user) {
+        // If no session, try to sign in the user
+        if (!data.session) {
+          const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+            email: formData.email,
+            password: formData.password,
+          });
+
+          if (signInError) {
+            setErrors({ general: 'Account created but sign in failed. Please check your email for confirmation or try logging in.' });
+            return;
+          }
+        }
+
         // Insert into profiles table
         const { error: profileError } = await supabase
           .from('profiles')
@@ -115,7 +128,6 @@ export default function SignupPage() {
           });
 
         if (profileError) {
-          console.error('Profile insert error:', profileError);
           setErrors({ general: 'Account created but profile setup failed. Please contact support.' });
           return;
         }
