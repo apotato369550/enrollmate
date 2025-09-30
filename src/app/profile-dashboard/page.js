@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
 import { useRouter } from 'next/navigation';
+import PFPToolbar from '../../components/PFPToolbar';
 
 export default function ProfileDashboard() {
   const [user, setUser] = useState(null);
@@ -60,28 +61,7 @@ export default function ProfileDashboard() {
           </div>
           
           {/* PFP Toolbar */}
-          <div className="flex items-center space-x-4">
-            {profile && (
-              <>
-                <span className="text-white font-jakarta font-bold text-sm sm:text-base md:text-lg drop-shadow-lg hidden sm:block">
-                  {profile.first_name} {profile.last_name}
-                </span>
-                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full overflow-hidden bg-white/20 border-2 border-white/30">
-                  <img 
-                    src="https://api.builder.io/api/v1/image/assets/TEMP/680fcbda4df1115fe0357aadd4ff2ef39f8fb0f6?width=596"
-                    alt="Profile"
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-                <button
-                  onClick={handleLogout}
-                  className="text-white font-jakarta font-medium text-sm sm:text-base hover:text-white/90 transition-colors"
-                >
-                  Logout
-                </button>
-              </>
-            )}
-          </div>
+          <PFPToolbar user={user} profile={profile} />
         </div>
       </header>
 
