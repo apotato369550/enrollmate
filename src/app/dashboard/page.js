@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
 import { useRouter } from 'next/navigation';
+import PFPToolbar from '../../components/PFPToolbar';
 
 export default function Dashboard() {
   const [showScheduleForm, setShowScheduleForm] = useState(false);
@@ -104,19 +105,14 @@ export default function Dashboard() {
             />
           </div>
           
-          {/* User Info and Logout */}
+          {/* PFP Toolbar */}
           <nav className="flex items-center space-x-4 sm:space-x-6 md:space-x-8">
             {profile && (
-              <span className="text-white font-jakarta font-bold text-lg sm:text-xl md:text-2xl lg:text-3xl drop-shadow-lg">
-                Welcome, {profile.first_name} {profile.last_name}
+              <span className="text-white font-jakarta font-bold text-lg sm:text-xl md:text-2xl lg:text-3xl drop-shadow-lg mr-4">
+                Welcome, {profile.first_name}
               </span>
             )}
-            <button
-              onClick={handleLogout}
-              className="text-white font-jakarta font-bold text-lg sm:text-xl md:text-2xl lg:text-3xl drop-shadow-lg hover:text-white/90 transition-colors"
-            >
-              Logout
-            </button>
+            <PFPToolbar user={user} profile={profile} />
           </nav>
         </div>
       </header>
