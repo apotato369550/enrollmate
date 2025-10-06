@@ -11,6 +11,8 @@ export default function Dashboard() {
   const [user, setUser] = useState(null);
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [showProfileDropdown, setShowProfileDropdown] = useState(false);
+  const dropdownRef = useRef(null);
   const router = useRouter();
   const [formData, setFormData] = useState({
     scheduleName: '',
@@ -91,6 +93,18 @@ export default function Dashboard() {
     return () => document.removeEventListener('keydown', handleEscape);
   }, [showScheduleForm]);
 
+  // Handle click outside to close dropdown
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setShowProfileDropdown(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-enrollmate-bg-start to-enrollmate-bg-end">
       {/* Header */}
@@ -105,19 +119,48 @@ export default function Dashboard() {
             />
           </div>
           
-          {/* User Info and Logout */}
+          {/* User Info and Actions */}
           <nav className="flex items-center space-x-4 sm:space-x-6 md:space-x-8">
             {profile && (
               <span className="text-white font-jakarta font-bold text-lg sm:text-xl md:text-2xl lg:text-3xl drop-shadow-lg">
                 Welcome, {profile.first_name} {profile.last_name}
               </span>
             )}
-            <button
-              onClick={handleLogout}
-              className="text-white font-jakarta font-bold text-lg sm:text-xl md:text-2xl lg:text-3xl drop-shadow-lg hover:text-white/90 transition-colors"
-            >
-              Logout
-            </button>
+
+            {/* Profile Dropdown */}
+            <div className="relative" ref={dropdownRef}>
+              <button
+                onClick={() => setShowProfileDropdown(!showProfileDropdown)}
+                className="w-12 h-12 sm:w-14 sm:h-14 rounded-full overflow-hidden border-2 border-white shadow-lg hover:scale-105 transition-transform duration-200"
+              >
+                <img
+                  src="https://api.builder.io/api/v1/image/assets/TEMP/680fcbda4df1115fe0357aadd4ff2ef39f8fb0f6?width=596"
+                  alt="Profile"
+                  className="w-full h-full object-cover"
+                />
+              </button>
+
+              {showProfileDropdown && (
+                <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-xl py-2 z-50">
+                  <Link
+                    href="/profile"
+                    className="block px-4 py-2 text-gray-800 hover:bg-gray-100 font-jakarta font-medium transition-colors"
+                    onClick={() => setShowProfileDropdown(false)}
+                  >
+                    View Profile
+                  </Link>
+                  <button
+                    onClick={() => {
+                      setShowProfileDropdown(false);
+                      handleLogout();
+                    }}
+                    className="w-full text-left px-4 py-2 text-gray-800 hover:bg-gray-100 font-jakarta font-medium transition-colors"
+                  >
+                    Logout
+                  </button>
+                </div>
+              )}
+            </div>
           </nav>
         </div>
       </header>
