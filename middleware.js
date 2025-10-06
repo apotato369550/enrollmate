@@ -58,8 +58,18 @@ export async function middleware(request) {
     data: { session },
   } = await supabase.auth.getSession()
 
-  // Protect dashboard route
-  if (request.nextUrl.pathname.startsWith('/dashboard')) {
+  // Redirect authenticated users from home to dashboard
+  if (request.nextUrl.pathname === '/') {
+    if (session) {
+      return NextResponse.redirect(new URL('/dashboard', request.url))
+    }
+  }
+
+  // Protect dashboard and profile routes
+  if (
+    request.nextUrl.pathname.startsWith('/dashboard') ||
+    request.nextUrl.pathname.startsWith('/profile')
+  ) {
     if (!session) {
       return NextResponse.redirect(new URL('/login', request.url))
     }
@@ -69,5 +79,5 @@ export async function middleware(request) {
 }
 
 export const config = {
-  matcher: ['/dashboard/:path*'],
+  matcher: ['/', '/dashboard/:path*', '/profile/:path*'],
 }
