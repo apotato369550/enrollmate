@@ -66,7 +66,10 @@ export async function middleware(request) {
   }
 
   // Protect dashboard and profile routes
-  if (request.nextUrl.pathname.startsWith('/dashboard') || request.nextUrl.pathname.startsWith('/profile')) {
+  if (
+    request.nextUrl.pathname.startsWith('/dashboard') ||
+    request.nextUrl.pathname.startsWith('/profile')
+  ) {
     if (!session) {
       return NextResponse.redirect(new URL('/login', request.url))
     }
