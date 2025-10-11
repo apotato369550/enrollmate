@@ -96,17 +96,6 @@ export default function Profile() {
                         className="w-full h-full object-cover"
                       />
                     </div>
-
-                    <div className="absolute bottom-0 right-0 transform translate-x-2 translate-y-2">
-                      <button
-                        onClick={() => alert('Upload photo not implemented')}
-                        className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-gradient-to-br from-[#9DF313] to-[#F3FD02] flex items-center justify-center shadow hover:scale-105 transition"
-                      >
-                        <svg width="14" height="14" viewBox="0 0 48 47" fill="none">
-                          <path d="M28 32.4286H13V27.5714H28V13H33V27.5714H48V32.4286H33V47H28V32.4286Z" fill="white"/>
-                        </svg>
-                      </button>
-                    </div>
                   </div>
 
                   <div className="text-center lg:text-left">
@@ -149,48 +138,10 @@ export default function Profile() {
                     </div>
                   </div>
 
-                  {/* Wide space below - Bio & Preferences */}
-                  <div className="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <div className="bg-white p-6 rounded-md shadow">
-                      <h3 className="text-[#111827] font-jakarta font-semibold mb-3">About</h3>
-                      <p className="text-gray-600 text-sm leading-relaxed">
-                        {profile?.bio || 'Add a short bio about yourself. This area can be used to show interests, study focus, or any other personal notes.'}
-                      </p>
-                    </div>
-
-                    <div className="bg-white p-6 rounded-md shadow flex flex-col justify-between">
-                      <div>
-                        <h3 className="text-[#111827] font-jakarta font-semibold mb-3">Preferences</h3>
-                        <div className="space-y-3">
-                          <div className="flex items-center justify-between">
-                            <div>
-                              <p className="text-sm font-medium text-gray-700">Notifications</p>
-                              <p className="text-xs text-gray-500">Receive important updates via email</p>
-                            </div>
-                            <div className="w-14 h-8 bg-gray-200 rounded-full flex items-center p-1 shadow">
-                              <div className="w-6 h-6 bg-white rounded-full shadow ml-auto" />
-                            </div>
-                          </div>
-
-                          <div className="flex items-center justify-between">
-                            <div>
-                              <p className="text-sm font-medium text-gray-700">Visibility</p>
-                              <p className="text-xs text-gray-500">Profile visible to classmates</p>
-                            </div>
-                            <div className="w-14 h-8 bg-gray-200 rounded-full flex items-center p-1 shadow">
-                              <div className="w-6 h-6 bg-white rounded-full shadow ml-auto" />
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Bottom actions */}
-                      <div className="mt-4 flex flex-wrap gap-3">
-                        <button onClick={() => alert('Edit profile not implemented')} className="px-4 py-2 bg-enrollmate-green text-white rounded-md font-jakarta font-semibold shadow">Edit Profile</button>
-                        <button onClick={() => alert('Change password not implemented')} className="px-4 py-2 bg-white border border-gray-200 text-gray-800 rounded-md font-jakarta shadow">Change Password</button>
-                        <button onClick={() => alert('Deactivate account not implemented')} className="px-4 py-2 bg-red-600 text-white rounded-md font-jakarta shadow">Deactivate Account</button>
-                      </div>
-                    </div>
+                  <div className="mt-8 flex flex-wrap gap-3">
+                    <button onClick={() => alert('Edit profile not implemented')} className="px-4 py-2 bg-enrollmate-green text-white rounded-md font-jakarta font-semibold shadow">Edit Profile</button>
+                    <button onClick={() => alert('Change password not implemented')} className="px-4 py-2 bg-white border border-gray-200 text-gray-800 rounded-md font-jakarta shadow">Change Password</button>
+                    <button onClick={() => alert('Deactivate account not implemented')} className="px-4 py-2 bg-red-600 text-white rounded-md font-jakarta shadow">Deactivate Account</button>
                   </div>
                 </div>
               </div>
