@@ -184,7 +184,7 @@ export default function ProfileDashboard() {
                       Contact No.
                     </label>
                     <div className="bg-white rounded-lg px-4 py-3 md:py-4 text-[#2B2B2B] font-jakarta text-base md:text-lg border border-gray-200">
-                      {profile?.phone || 'Not set'}
+                      {profile?.contact_number || 'Not set'}
                     </div>
                   </div>
                 </div>
