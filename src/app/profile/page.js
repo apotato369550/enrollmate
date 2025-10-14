@@ -55,6 +55,22 @@ export default function Profile() {
 
     console.log('File selected:', file.name, 'Size:', file.size, 'Type:', file.type);
 
+    // Check file constraints
+    const maxSize = 5 * 1024 * 1024; // 5MB
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+
+    if (file.size > maxSize) {
+      console.error('File too large:', file.size, 'Max allowed:', maxSize);
+      setErrors({ avatar: 'File size must be less than 5MB' });
+      return;
+    }
+
+    if (!allowedTypes.includes(file.type)) {
+      console.error('Invalid file type:', file.type, 'Allowed types:', allowedTypes);
+      setErrors({ avatar: 'File must be an image (JPEG, PNG, GIF, WebP)' });
+      return;
+    }
+
     // Upload to Supabase storage
     // Note: Ensure a storage bucket named 'avatars' exists in Supabase with public access
     const fileExt = file.name.split('.').pop();
