@@ -13,6 +13,14 @@ export default function Profile() {
   const [formData, setFormData] = useState({});
   const [saving, setSaving] = useState(false);
   const [errors, setErrors] = useState({});
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
+  const [passwordData, setPasswordData] = useState({
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: ''
+  });
+  const [passwordErrors, setPasswordErrors] = useState({});
+  const [passwordSaving, setPasswordSaving] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -74,14 +82,38 @@ export default function Profile() {
     // Upload to Supabase storage
     // Note: Ensure a storage bucket named 'avatars' exists in Supabase with public access
     const fileExt = file.name.split('.').pop();
-    const fileName = `${user.id}.${fileExt}`;
+    const fileName = `${user.id}/${user.id}.${fileExt}`;
+    console.log('=== AVATAR UPLOAD DEBUG INFO ===');
     console.log('Attempting upload to bucket "avatars" with fileName:', fileName);
+    console.log('User ID:', user.id);
+    console.log('User authenticated:', !!user);
+    console.log('File details:', {
+      name: file.name,
+      size: file.size,
+      type: file.type,
+      ext: fileExt
+    });
 
+    // Check if bucket exists first
+    console.log('Checking if avatars bucket exists...');
+    const { data: buckets, error: bucketsError } = await supabase.storage.listBuckets();
+    if (bucketsError) {
+      console.error('Error listing buckets:', bucketsError);
+    } else {
+      const avatarBucket = buckets.find(bucket => bucket.name === 'avatars');
+      console.log('Avatars bucket found:', !!avatarBucket);
+      if (avatarBucket) {
+        console.log('Avatars bucket details:', avatarBucket);
+      }
+    }
+
+    console.log('Starting actual upload...');
     const { data, error } = await supabase.storage
       .from('avatars') // Assuming bucket name 'avatars'
       .upload(fileName, file, { upsert: true });
 
     if (error) {
+      console.error('=== SUPABASE STORAGE UPLOAD ERROR ===');
       console.error('Supabase storage upload error:', error);
       console.log('Error details:', {
         message: error.message,
@@ -89,7 +121,8 @@ export default function Profile() {
         details: error.details,
         hint: error.hint
       });
-      setErrors({ avatar: 'Failed to upload image' });
+      console.log('This is likely an RLS policy issue. Check your Supabase dashboard.');
+      setErrors({ avatar: `Upload failed: ${error.message}. This may be due to missing RLS policies.` });
       return;
     }
 
@@ -205,6 +238,94 @@ export default function Profile() {
     });
     setIsEditing(false);
     setErrors({});
+  };
+
+  const handlePasswordInputChange = (e) => {
+    const { name, value } = e.target;
+    setPasswordData(prev => ({ ...prev, [name]: value }));
+    if (passwordErrors[name]) {
+      setPasswordErrors(prev => ({ ...prev, [name]: '' }));
+    }
+  };
+
+  const validatePasswordForm = () => {
+    const newErrors = {};
+
+    if (!passwordData.currentPassword.trim()) {
+      newErrors.currentPassword = 'Current password is required';
+    }
+
+    if (!passwordData.newPassword.trim()) {
+      newErrors.newPassword = 'New password is required';
+    } else if (passwordData.newPassword.length < 8) {
+      newErrors.newPassword = 'Password must be at least 8 characters long';
+    } else if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(passwordData.newPassword)) {
+      newErrors.newPassword = 'Password must contain at least one uppercase letter, one lowercase letter, and one number';
+    }
+
+    if (!passwordData.confirmPassword.trim()) {
+      newErrors.confirmPassword = 'Please confirm your new password';
+    } else if (passwordData.newPassword !== passwordData.confirmPassword) {
+      newErrors.confirmPassword = 'Passwords do not match';
+    }
+
+    setPasswordErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handlePasswordChange = async () => {
+    if (!validatePasswordForm()) return;
+
+    setPasswordSaving(true);
+
+    try {
+      // First verify the current password by attempting to sign in
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: user.email,
+        password: passwordData.currentPassword
+      });
+
+      if (signInError) {
+        setPasswordErrors({ currentPassword: 'Current password is incorrect' });
+        return;
+      }
+
+      // Update to new password
+      const { error: updateError } = await supabase.auth.updateUser({
+        password: passwordData.newPassword
+      });
+
+      if (updateError) {
+        setPasswordErrors({ general: updateError.message });
+        return;
+      }
+
+      // Success - reset form and close modal
+      setPasswordData({
+        currentPassword: '',
+        newPassword: '',
+        confirmPassword: ''
+      });
+      setIsChangingPassword(false);
+      setPasswordErrors({});
+      alert('Password changed successfully!');
+
+    } catch (err) {
+      console.error('Password change error:', err);
+      setPasswordErrors({ general: 'An error occurred while changing password' });
+    } finally {
+      setPasswordSaving(false);
+    }
+  };
+
+  const handlePasswordCancel = () => {
+    setPasswordData({
+      currentPassword: '',
+      newPassword: '',
+      confirmPassword: ''
+    });
+    setIsChangingPassword(false);
+    setPasswordErrors({});
   };
 
   if (loading) {
@@ -435,6 +556,89 @@ export default function Profile() {
 
                   {errors.general && <p className="text-red-500 text-sm mt-4">{errors.general}</p>}
                   {errors.avatar && <p className="text-red-500 text-sm mt-4">{errors.avatar}</p>}
+
+                  {/* Change Password Modal */}
+                  {isChangingPassword && (
+                    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+                      <div className="bg-white rounded-lg p-6 w-full max-w-md">
+                        <h3 className="text-lg font-semibold mb-4">Change Password</h3>
+
+                        <div className="space-y-4">
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                              Current Password
+                            </label>
+                            <input
+                              type="password"
+                              name="currentPassword"
+                              value={passwordData.currentPassword}
+                              onChange={handlePasswordInputChange}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-enrollmate-green"
+                              placeholder="Enter current password"
+                            />
+                            {passwordErrors.currentPassword && (
+                              <p className="text-red-500 text-sm mt-1">{passwordErrors.currentPassword}</p>
+                            )}
+                          </div>
+
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                              New Password
+                            </label>
+                            <input
+                              type="password"
+                              name="newPassword"
+                              value={passwordData.newPassword}
+                              onChange={handlePasswordInputChange}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-enrollmate-green"
+                              placeholder="Enter new password"
+                            />
+                            {passwordErrors.newPassword && (
+                              <p className="text-red-500 text-sm mt-1">{passwordErrors.newPassword}</p>
+                            )}
+                          </div>
+
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                              Confirm New Password
+                            </label>
+                            <input
+                              type="password"
+                              name="confirmPassword"
+                              value={passwordData.confirmPassword}
+                              onChange={handlePasswordInputChange}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-enrollmate-green"
+                              placeholder="Confirm new password"
+                            />
+                            {passwordErrors.confirmPassword && (
+                              <p className="text-red-500 text-sm mt-1">{passwordErrors.confirmPassword}</p>
+                            )}
+                          </div>
+
+                          {passwordErrors.general && (
+                            <p className="text-red-500 text-sm">{passwordErrors.general}</p>
+                          )}
+                        </div>
+
+                        <div className="flex gap-3 mt-6">
+                          <button
+                            onClick={handlePasswordChange}
+                            disabled={passwordSaving}
+                            className="flex-1 px-4 py-2 bg-enrollmate-green text-white rounded-md font-jakarta font-semibold shadow disabled:opacity-50"
+                          >
+                            {passwordSaving ? 'Changing...' : 'Change Password'}
+                          </button>
+                          <button
+                            onClick={handlePasswordCancel}
+                            className="flex-1 px-4 py-2 bg-gray-500 text-white rounded-md font-jakarta shadow"
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
                   <div className="mt-8 flex flex-wrap gap-3">
                     {isEditing ? (
                       <>
@@ -446,7 +650,7 @@ export default function Profile() {
                     ) : (
                       <button onClick={() => setIsEditing(true)} className="px-4 py-2 bg-enrollmate-green text-white rounded-md font-jakarta font-semibold shadow">Edit Profile</button>
                     )}
-                    <button onClick={() => alert('Change password not implemented')} className="px-4 py-2 bg-white border border-gray-200 text-gray-800 rounded-md font-jakarta shadow">Change Password</button>
+                    <button onClick={() => setIsChangingPassword(true)} className="px-4 py-2 bg-white border border-gray-200 text-gray-800 rounded-md font-jakarta shadow">Change Password</button>
                     <button onClick={() => alert('Deactivate account not implemented')} className="px-4 py-2 bg-red-600 text-white rounded-md font-jakarta shadow">Deactivate Account</button>
                   </div>
                 </div>
