@@ -1,0 +1,102 @@
+╔════════════════════════════════════════════════════════════════════╗
+║         ENROLLMATE SCHEDULER - SAMPLE CSV QUICK REFERENCE          ║
+╚════════════════════════════════════════════════════════════════════╝
+
+📍 LOCATION: /sample-schedules/
+
+📋 AVAILABLE ARCHETYPES (8 total):
+
+1. 🖥️  COMPUTER SCIENCE
+   File: computer-science/cs-student-schedule.csv
+   Courses: DSA, Networking II, Assembly, OOP, Web Dev II, Calculus I
+   Total Sections: 18 (3 per course)
+
+2. ⚙️  ENGINEERING
+   File: engineering/engineering-student-schedule.csv
+   Courses: Mechanics, Thermodynamics, Fluid Mechanics, Materials,
+            Circuit Analysis, Differential Equations
+   Total Sections: 18 (3 per course)
+
+3. ⚖️  LAW
+   File: law/law-student-schedule.csv
+   Courses: Legal Systems, Constitutional Law, Criminal Law, Contract Law,
+            Legal Research & Writing, American Government
+   Total Sections: 18 (3 per course)
+
+4. 🧠 PSYCHOLOGY
+   File: psychology/psychology-student-schedule.csv
+   Courses: Intro Psychology, Developmental, Abnormal, Cognitive,
+            Research Methods, Statistics
+   Total Sections: 18 (3 per course)
+
+5. 🧬 BIOLOGY
+   File: biology/biology-student-schedule.csv
+   Courses: Biology I, Genetics, Microbiology, Cell Biology,
+            Ecology, Chemistry I
+   Total Sections: 18 (3 per course)
+
+6. ⚛️  PHYSICS
+   File: physics/physics-student-schedule.csv
+   Courses: Physics I, Physics II, Modern Physics, Quantum Mechanics,
+            Electromagnetism, Linear Algebra
+   Total Sections: 18 (3 per course)
+
+7. 💰 FINANCE
+   File: finance/finance-student-schedule.csv
+   Courses: Corporate Finance, Investment Analysis, Financial Markets,
+            Risk Management, International Finance, Macroeconomics
+   Total Sections: 18 (3 per course)
+
+8. 📊 ACCOUNTING
+   File: accounting/accounting-student-schedule.csv
+   Courses: Financial Accounting, Managerial Accounting,
+            Intermediate Accounting, Cost Accounting, Auditing,
+            Legal Environment of Business
+   Total Sections: 18 (3 per course)
+
+─────────────────────────────────────────────────────────────────────
+
+🎯 QUICK IMPORT INSTRUCTIONS:
+
+1. Open Enrollmate at: http://localhost:3000/scheduler
+2. Click the green "Import CSV" button (top-right of Add Courses panel)
+3. Select any CSV file from the folders above
+4. Courses auto-populate - ready to generate schedules!
+
+─────────────────────────────────────────────────────────────────────
+
+📊 CSV FORMAT:
+Course Code, Course Name, Group, Schedule, Enrolled
+
+Example:
+CIS 3100, Data Structures and Algorithms, 1, MW 11:00 AM - 12:30 PM, 25/30
+
+─────────────────────────────────────────────────────────────────────
+
+✨ TEST SCENARIOS:
+
+• Morning Schedule: Set Earliest=08:00, Latest=13:00
+• Afternoon Schedule: Set Earliest=12:00, Latest=18:00
+• Avoid Full Sections: Uncheck "Allow full sections"
+• Avoid At-Risk: Uncheck "Allow at-risk sections"
+• Compact Schedule: Try to fit all on MW or TTh only
+
+─────────────────────────────────────────────────────────────────────
+
+📁 FULL FILE PATHS:
+
+./sample-schedules/computer-science/cs-student-schedule.csv
+./sample-schedules/engineering/engineering-student-schedule.csv
+./sample-schedules/law/law-student-schedule.csv
+./sample-schedules/psychology/psychology-student-schedule.csv
+./sample-schedules/biology/biology-student-schedule.csv
+./sample-schedules/physics/physics-student-schedule.csv
+./sample-schedules/finance/finance-student-schedule.csv
+./sample-schedules/accounting/accounting-student-schedule.csv
+
+─────────────────────────────────────────────────────────────────────
+
+💡 PRO TIP: Mix and match courses from different CSVs to create a
+             custom schedule for students with diverse interests!
+
+🚀 Happy scheduling! Padayon!

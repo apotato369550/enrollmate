@@ -231,14 +231,20 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Create New Schedule Button */}
-        <div className="text-center mb-8 lg:mb-12">
+        {/* Create New Schedule and Scheduler Buttons */}
+        <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-8 lg:mb-12">
           <button
             onClick={() => setShowScheduleForm(true)}
             className="bg-enrollmate-green hover:bg-enrollmate-green/90 text-white font-jakarta font-bold text-xl sm:text-2xl lg:text-3xl px-8 sm:px-12 lg:px-16 py-3 sm:py-4 lg:py-5 rounded-xl drop-shadow-lg transform hover:scale-105 transition-all duration-300"
           >
             Create New Schedule
           </button>
+          <Link
+            href="/scheduler"
+            className="bg-blue-600 hover:bg-blue-700 text-white font-jakarta font-bold text-xl sm:text-2xl lg:text-3xl px-8 sm:px-12 lg:px-16 py-3 sm:py-4 lg:py-5 rounded-xl drop-shadow-lg transform hover:scale-105 transition-all duration-300"
+          >
+            Open Course Scheduler
+          </Link>
         </div>
 
         {/* Recent Activity Section */}

@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run dev)",
+      "Bash(curl http://localhost:3000/scheduler)",
+      "Bash(tree sample-schedules -L 2)",
+      "Bash(node test-scheduler.js)",
+      "Bash(node test-large-dataset.js)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
