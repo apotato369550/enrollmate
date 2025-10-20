@@ -440,113 +440,191 @@ function ConstraintsPanel({ constraints, setConstraints, onGenerate, isGeneratin
 
 /**
  * TimetableGrid Component - Visual timetable grid for a single schedule
+ * Matches the reference layout with full-width table, soft colors, and room numbers
  */
 function TimetableGrid({ schedule }) {
   const days = ['M', 'T', 'W', 'Th', 'F'];
   const dayNames = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
 
-  // Extract time range from schedule
-  const allTimes = schedule.parsed.flatMap(p => [p.startTime, p.endTime]);
-  const minTime = Math.min(...allTimes);
-  const maxTime = Math.max(...allTimes);
+  // Color palette for courses - soft, muted colors from reference
+  const courseColors = [
+    'bg-[#C8B8A8] text-gray-800',    // Tan/beige
+    'bg-[#E89B8E] text-gray-800',    // Coral
+    'bg-[#B8A8C8] text-gray-800',    // Lavender
+    'bg-[#5FBDBD] text-gray-800',    // Teal
+    'bg-[#A8D5BA] text-gray-800',    // Mint green
+    'bg-[#F4C2A8] text-gray-800',    // Peach
+    'bg-[#98C1D9] text-gray-800',    // Light blue
+    'bg-[#D4A5A5] text-gray-800',    // Dusty rose
+  ];
 
-  // Round to hour boundaries
-  const startHour = Math.floor(minTime / 60);
-  const endHour = Math.ceil(maxTime / 60);
-
-  // Generate time slots (hourly)
-  const timeSlots = [];
-  for (let hour = startHour; hour <= endHour; hour++) {
-    timeSlots.push(hour * 60);
-  }
-
-  // Format time for display
-  const formatTime = (minutes) => {
-    const hours = Math.floor(minutes / 60);
-    const mins = minutes % 60;
-    const ampm = hours >= 12 ? 'PM' : 'AM';
-    const displayHour = hours > 12 ? hours - 12 : hours === 0 ? 12 : hours;
-    return `${displayHour}:${mins.toString().padStart(2, '0')} ${ampm}`;
+  // Assign consistent colors to each unique course code
+  const getCourseColor = (courseCode) => {
+    const courseIndex = schedule.selections.findIndex(s => s.courseCode === courseCode);
+    return courseColors[courseIndex % courseColors.length];
   };
 
-  // Get status color for a section
-  const getStatusColor = (section) => {
-    const enrolledMatch = section.enrolled?.match(/(\d+)\/(\d+)/);
-    if (enrolledMatch) {
-      const current = parseInt(enrolledMatch[1]);
-      const total = parseInt(enrolledMatch[2]);
-      if (current >= total) return 'bg-red-400';
-      if (current === 0 || (total >= 20 && current < 6) || (total >= 10 && current < 2)) {
-        return 'bg-yellow-400';
-      }
+  // Generate room number based on course code and group
+  const getRoomNumber = (courseCode, group) => {
+    // Extract building code from course code (e.g., "CIS" from "CIS 3100")
+    const buildingCode = courseCode.split(' ')[0];
+    // Generate a room number based on course and group
+    const courseNum = courseCode.split(' ')[1] || '100';
+    const baseRoom = parseInt(courseNum.substring(0, 2)) || 10;
+    return `${buildingCode}${baseRoom}${group}TC`;
+  };
+
+  // Generate 30-minute interval time slots
+  const generateTimeSlots = () => {
+    const slots = [];
+    // Start at 7:30 AM (450 minutes) and end at 5:30 PM (1050 minutes)
+    for (let minutes = 450; minutes <= 1050; minutes += 30) {
+      slots.push(minutes);
     }
-    return 'bg-blue-400';
+    return slots;
+  };
+
+  const timeSlots = generateTimeSlots();
+
+  // Format time for display (e.g., "08:00 AM - 08:30 AM")
+  const formatTimeRange = (startMinutes) => {
+    const formatTime = (minutes) => {
+      const hours = Math.floor(minutes / 60);
+      const mins = minutes % 60;
+      const ampm = hours >= 12 ? 'PM' : 'AM';
+      const displayHour = hours > 12 ? hours - 12 : hours === 0 ? 12 : hours;
+      return `${displayHour.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')} ${ampm}`;
+    };
+
+    return `${formatTime(startMinutes)} - ${formatTime(startMinutes + 30)}`;
+  };
+
+  // Print function
+  const handlePrint = () => {
+    window.print();
   };
 
   return (
-    <div className="mt-6 overflow-x-auto bg-white rounded-2xl p-4 shadow-lg">
-      <h4 className="font-jakarta font-bold text-lg text-gray-800 mb-3">📅 Weekly Timetable</h4>
-      <div className="min-w-full">
-        <div className="grid grid-cols-6 gap-2">
-          {/* Header row */}
-          <div className="text-sm font-jakarta font-bold text-gray-600 p-3 bg-gray-100 rounded-lg">Time</div>
-          {days.map((day, idx) => (
-            <div key={day} className="text-sm font-jakarta font-bold text-gray-700 p-3 text-center bg-enrollmate-green/10 rounded-lg">
-              {dayNames[idx]}
-            </div>
-          ))}
-
-          {/* Time slots */}
-          {timeSlots.slice(0, -1).map((timeSlot, timeIndex) => (
-            <React.Fragment key={timeSlot}>
-              {/* Time label */}
-              <div className="text-sm font-jakarta font-semibold text-gray-600 p-3 bg-gray-50 rounded-lg flex items-center">
-                {formatTime(timeSlot)}
-              </div>
-
-              {/* Day columns */}
-              {days.map((day) => {
-                // Find sections for this day and time
-                const sectionsInSlot = schedule.selections.filter((section, idx) => {
-                  const parsed = schedule.parsed[idx];
-                  if (!parsed) return false;
-                  return parsed.days.includes(day) &&
-                    parsed.startTime < timeSlots[timeIndex + 1] &&
-                    parsed.endTime > timeSlot;
-                });
-
-                return (
-                  <div key={day} className="border-2 border-gray-200 bg-gray-50 rounded-lg relative min-h-[80px]">
-                    {sectionsInSlot.map((section, idx) => {
-                      const parsed = schedule.parsed[schedule.selections.indexOf(section)];
-                      // Check if this is the start of the block for this day
-                      const isStart = parsed.startTime >= timeSlot && parsed.startTime < timeSlots[timeIndex + 1];
-
-                      if (isStart) {
-                        return (
-                          <div
-                            key={idx}
-                            className={`absolute inset-0 m-1 p-3 rounded-lg text-white shadow-md ${getStatusColor(section)}`}
-                            style={{
-                              top: '4px',
-                              bottom: '4px'
-                            }}
-                          >
-                            <div className="font-jakarta font-bold text-base leading-tight">{section.courseCode}</div>
-                            <div className="font-jakarta font-semibold text-sm mt-1 opacity-95">Group {section.group}</div>
-                            <div className="font-jakarta text-xs mt-1 opacity-90">{section.enrolled}</div>
-                          </div>
-                        );
-                      }
-                      return null;
-                    })}
-                  </div>
-                );
-              })}
-            </React.Fragment>
-          ))}
-        </div>
+    <div className="mt-8 w-full">
+      {/* Header */}
+      <div className="mb-4">
+        <h3 className="text-xl font-jakarta font-bold text-enrollmate-green flex items-center gap-2">
+          <span className="text-2xl">✦</span>
+          YOUR SCHEDULE FOR THIS TERM
+        </h3>
       </div>
+
+      {/* Full-width table */}
+      <div className="overflow-x-auto bg-white rounded-lg shadow-sm border border-gray-200">
+        <table className="w-full border-collapse">
+          {/* Table Header */}
+          <thead>
+            <tr className="bg-gray-50">
+              <th className="border border-gray-300 p-3 text-left font-jakarta font-bold text-sm text-gray-700 w-48">
+                Time
+              </th>
+              {dayNames.map((day) => (
+                <th key={day} className="border border-gray-300 p-3 text-center font-jakarta font-bold text-sm text-gray-700">
+                  {day}
+                </th>
+              ))}
+            </tr>
+          </thead>
+
+          {/* Table Body */}
+          <tbody>
+            {timeSlots.slice(0, -1).map((timeSlot) => {
+              return (
+                <tr key={timeSlot} className="hover:bg-gray-50/50 transition-colors">
+                  {/* Time column */}
+                  <td className="border border-gray-300 p-3 text-sm font-jakarta text-gray-600 bg-gray-50/30">
+                    {formatTimeRange(timeSlot)}
+                  </td>
+
+                  {/* Day columns */}
+                  {days.map((day) => {
+                    // Find sections that occupy this time slot on this day
+                    const sectionsInSlot = schedule.selections.filter((_, idx) => {
+                      const parsed = schedule.parsed[idx];
+                      if (!parsed) return false;
+                      return parsed.days.includes(day) &&
+                        parsed.startTime <= timeSlot &&
+                        parsed.endTime > timeSlot;
+                    });
+
+                    // Check if this is the start of a course block
+                    const startingSection = sectionsInSlot.find((section) => {
+                      const sectionIdx = schedule.selections.indexOf(section);
+                      const parsed = schedule.parsed[sectionIdx];
+                      return parsed.startTime === timeSlot;
+                    });
+
+                    if (startingSection) {
+                      const sectionIdx = schedule.selections.indexOf(startingSection);
+                      const parsed = schedule.parsed[sectionIdx];
+
+                      // Calculate rowspan based on duration (30-minute slots)
+                      const duration = parsed.endTime - parsed.startTime;
+                      const rowspan = Math.ceil(duration / 30);
+
+                      return (
+                        <td
+                          key={day}
+                          rowSpan={rowspan}
+                          className={`border border-gray-300 p-4 text-center align-middle ${getCourseColor(startingSection.courseCode)}`}
+                        >
+                          <div className="font-jakarta space-y-1">
+                            <div className="font-bold text-sm leading-tight">
+                              {startingSection.courseCode} {getRoomNumber(startingSection.courseCode, startingSection.group)}
+                            </div>
+                            <div className="text-xs font-semibold opacity-90">
+                              Group {startingSection.group}
+                            </div>
+                          </div>
+                        </td>
+                      );
+                    }
+
+                    // Skip cell if it's part of a rowspan from above
+                    const isPartOfSpan = sectionsInSlot.length > 0;
+                    if (isPartOfSpan) {
+                      return null;
+                    }
+
+                    // Empty cell
+                    return (
+                      <td key={day} className="border border-gray-300 p-4 bg-white">
+                      </td>
+                    );
+                  })}
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Print Button */}
+      <div className="mt-6 flex justify-center">
+        <button
+          onClick={handlePrint}
+          className="px-8 py-3 bg-gradient-to-r from-enrollmate-bg-start to-enrollmate-bg-end hover:from-enrollmate-green hover:to-enrollmate-green text-white font-jakarta font-bold text-base rounded-lg shadow-md hover:shadow-lg transition-all duration-300 hover:scale-105"
+        >
+          Print Schedule
+        </button>
+      </div>
+
+      {/* Print-specific styles */}
+      <style jsx>{`
+        @media print {
+          button {
+            display: none;
+          }
+          .overflow-x-auto {
+            overflow: visible;
+          }
+        }
+      `}</style>
     </div>
   );
 }
@@ -646,10 +724,10 @@ function ResultsPanel({ schedules, onSaveSchedule, onCopySchedule }) {
         </div>
       </div>
 
-      {/* Schedule Cards Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      {/* Schedule Cards - Full Width */}
+      <div className="space-y-6">
         {filteredSchedules.map((schedule, index) => (
-          <div key={index} className="bg-gradient-to-br from-white to-gray-50 border-2 border-enrollmate-green/20 rounded-2xl p-6 hover:shadow-2xl transition-all duration-300 hover:scale-[1.02]">
+          <div key={index} className="bg-gradient-to-br from-white to-gray-50 border-2 border-enrollmate-green/20 rounded-2xl p-6 hover:shadow-2xl transition-all duration-300">
             {/* Schedule Header */}
             <div className="flex justify-between items-start mb-4">
               <div>
