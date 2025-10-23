@@ -4,63 +4,36 @@ import { useState, useEffect, useRef } from 'react';
 import { supabase } from '../../lib/supabase';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import SemesterSelector from '../../components/SemesterSelector';
+import { SemesterAPI } from '../../../lib/api/semesterAPI';
+import { ScheduleAPI } from '../../../lib/api/scheduleAPI';
 
 export default function Dashboard() {
-  const [showScheduleForm, setShowScheduleForm] = useState(false);
-  const [activeFilter, setActiveFilter] = useState('All');
   const [user, setUser] = useState(null);
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showProfileDropdown, setShowProfileDropdown] = useState(false);
-  const dropdownRef = useRef(null);
-  const router = useRouter();
-  const [formData, setFormData] = useState({
-    scheduleName: '',
-    schoolYear: '',
-    semester: '',
-    creationDate: '',
-    status: 'Active',
-    yearLevel: ''
+  const [showSemesterModal, setShowSemesterModal] = useState(false);
+  const [currentSemester, setCurrentSemester] = useState(null);
+  const [schedules, setSchedules] = useState([]);
+  const [stats, setStats] = useState({
+    totalSchedules: 0,
+    activeSchedules: 0,
+    lastUpdated: null
   });
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-  };
+  const dropdownRef = useRef(null);
+  const router = useRouter();
 
-  const recentActivities = [
-    { id: 1, activity: 'Schedule created successfully', date: '9/26/25 (Just Now)', status: 'Completed', type: 'Create' },
-    { id: 2, activity: 'CS101 class added to schedule', date: '9/25/25 (6hrs ago)', status: 'Pending', type: 'Update' },
-    { id: 3, activity: 'Math 101 time conflict resolved', date: '9/25/25 (6hrs ago)', status: 'Resolved', type: 'Fix' },
-    { id: 4, activity: 'Fall 2024 schedule published', date: '9/24/25 (1 day ago)', status: 'Completed', type: 'Publish' },
-    { id: 5, activity: 'Physics lab section changed', date: '9/23/25 (2 days ago)', status: 'Completed', type: 'Update' },
-  ];
-
-  const filterOptions = ['All', 'Completed', 'Pending', 'Resolved'];
-  
-  const filteredActivities = activeFilter === 'All' 
-    ? recentActivities 
-    : recentActivities.filter(activity => activity.status === activeFilter);
+  // Semester modal form data
+  const [semesterForm, setSemesterForm] = useState({
+    semesterType: '1st',
+    year: new Date().getFullYear()
+  });
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
     router.push('/login');
-  };
-
-  const handleFormSubmit = (e) => {
-    e.preventDefault();
-    // Simulate form submission
-    alert('Schedule created successfully!');
-    setShowScheduleForm(false);
-    // Reset form
-    setFormData({
-      scheduleName: '',
-      schoolYear: '',
-      semester: '',
-      creationDate: '',
-      status: 'Active',
-      yearLevel: ''
-    });
   };
 
   // Fetch user and profile
@@ -75,23 +48,102 @@ export default function Dashboard() {
           .eq('id', user.id)
           .single();
         setProfile(profile);
+
+        // Load current semester
+        await loadCurrentSemester(user.id);
       }
       setLoading(false);
     };
     getUser();
   }, []);
 
+  // Load current semester
+  const loadCurrentSemester = async (userId) => {
+    try {
+      const semester = await SemesterAPI.getCurrentSemester(userId);
+      setCurrentSemester(semester);
+
+      if (semester) {
+        await loadSchedules(semester.id);
+      }
+    } catch (error) {
+      console.error('Failed to load current semester:', error);
+    }
+  };
+
+  // Load schedules for current semester
+  const loadSchedules = async (semesterId) => {
+    try {
+      const data = await ScheduleAPI.getSemesterSchedules(semesterId);
+      setSchedules(data);
+
+      // Calculate stats
+      const totalSchedules = data.length;
+      const activeSchedules = data.filter(s => s.status === 'active' || s.status === 'draft').length;
+      const lastUpdated = data.length > 0
+        ? new Date(Math.max(...data.map(s => new Date(s.id)))) // Using created_at would be better
+        : null;
+
+      setStats({
+        totalSchedules,
+        activeSchedules,
+        lastUpdated
+      });
+    } catch (error) {
+      console.error('Failed to load schedules:', error);
+    }
+  };
+
+  // Handle semester change
+  const handleSemesterChange = async (semester) => {
+    setCurrentSemester(semester);
+    await loadSchedules(semester.id);
+  };
+
+  // Handle create new semester
+  const handleCreateSemester = async (e) => {
+    e.preventDefault();
+
+    try {
+      const { semesterType, year } = semesterForm;
+      const name = `${semesterType} Semester ${year}`;
+      const schoolYear = semesterType === 'Summer'
+        ? `${year}`
+        : semesterType === '1st'
+        ? `${year}-${year + 1}`
+        : `${year - 1}-${year}`;
+
+      const newSemester = await SemesterAPI.createSemester(
+        user.id,
+        name,
+        schoolYear,
+        semesterType,
+        year
+      );
+
+      setCurrentSemester(newSemester);
+      setShowSemesterModal(false);
+      setSemesterForm({ semesterType: '1st', year: new Date().getFullYear() });
+
+      // Reload schedules (will be empty for new semester)
+      await loadSchedules(newSemester.id);
+    } catch (error) {
+      console.error('Failed to create semester:', error);
+      alert('Failed to create semester. Please try again.');
+    }
+  };
+
   // Handle escape key to close modal
   useEffect(() => {
     const handleEscape = (event) => {
-      if (event.key === 'Escape' && showScheduleForm) {
-        setShowScheduleForm(false);
+      if (event.key === 'Escape' && showSemesterModal) {
+        setShowSemesterModal(false);
       }
     };
 
     document.addEventListener('keydown', handleEscape);
     return () => document.removeEventListener('keydown', handleEscape);
-  }, [showScheduleForm]);
+  }, [showSemesterModal]);
 
   // Handle click outside to close dropdown
   useEffect(() => {
@@ -105,6 +157,29 @@ export default function Dashboard() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  // Format last updated time
+  const formatLastUpdated = (date) => {
+    if (!date) return 'Never';
+
+    const now = new Date();
+    const diff = now - date;
+    const hours = Math.floor(diff / (1000 * 60 * 60));
+    const days = Math.floor(hours / 24);
+
+    if (hours < 1) return 'Just now';
+    if (hours < 24) return `${hours} hour${hours > 1 ? 's' : ''} ago`;
+    if (days < 7) return `${days} day${days > 1 ? 's' : ''} ago`;
+    return date.toLocaleDateString();
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-enrollmate-bg-start to-enrollmate-bg-end flex items-center justify-center">
+        <div className="text-white font-jakarta font-bold text-2xl">Loading...</div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-enrollmate-bg-start to-enrollmate-bg-end">
       {/* Header */}
@@ -112,13 +187,13 @@ export default function Dashboard() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 sm:h-24 flex items-center justify-between">
           {/* Logo */}
           <div className="flex items-center">
-            <img 
+            <img
               src="https://api.builder.io/api/v1/image/assets/TEMP/152290938133b46f59604e8cf4419542cb66556d?width=592"
               alt="EnrollMate"
               className="h-12 sm:h-14 md:h-16 lg:h-18 w-auto opacity-90 drop-shadow-sm"
             />
           </div>
-          
+
           {/* User Info and Actions */}
           <nav className="flex items-center space-x-4 sm:space-x-6 md:space-x-8">
             {profile && (
@@ -174,9 +249,19 @@ export default function Dashboard() {
           </h1>
         </div>
 
+        {/* Semester Selector */}
+        <div className="flex justify-center mb-8">
+          <SemesterSelector
+            userId={user?.id}
+            currentSemester={currentSemester}
+            onSemesterChange={handleSemesterChange}
+            onCreateNew={() => setShowSemesterModal(true)}
+          />
+        </div>
+
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8 mb-8 lg:mb-12">
-          {/* Total Schedules Created */}
+          {/* Total Schedules */}
           <div className="bg-white rounded-3xl lg:rounded-[38px] p-6 lg:p-8 shadow-xl transform hover:scale-105 hover:shadow-2xl transition-all duration-300 cursor-pointer group">
             <div className="text-center">
               <div className="mb-3">
@@ -185,12 +270,14 @@ export default function Dashboard() {
                 </svg>
               </div>
               <h3 className="text-[#2B2B2B] font-jakarta font-bold text-lg sm:text-xl lg:text-2xl mb-2">
-                Total Schedules Created
+                Total Schedules
               </h3>
               <span className="text-enrollmate-green font-jakarta font-bold text-3xl sm:text-4xl lg:text-5xl">
-                12
+                {stats.totalSchedules}
               </span>
-              <p className="text-[#767676] font-jakarta text-sm mt-2">+2 this month</p>
+              <p className="text-[#767676] font-jakarta text-sm mt-2">
+                {currentSemester ? `in ${currentSemester.name}` : 'No semester selected'}
+              </p>
             </div>
           </div>
 
@@ -206,7 +293,7 @@ export default function Dashboard() {
                 Active Schedules
               </h3>
               <span className="text-enrollmate-green font-jakarta font-bold text-3xl sm:text-4xl lg:text-5xl">
-                3
+                {stats.activeSchedules}
               </span>
               <p className="text-[#767676] font-jakarta text-sm mt-2">Currently in use</p>
             </div>
@@ -224,307 +311,160 @@ export default function Dashboard() {
                 Last Updated
               </h3>
               <span className="text-[#767676] font-jakarta font-medium text-xl sm:text-2xl lg:text-3xl">
-                2 hours ago
+                {formatLastUpdated(stats.lastUpdated)}
               </span>
-              <p className="text-[#767676] font-jakarta text-sm mt-2">Fall 2024 schedule</p>
+              <p className="text-[#767676] font-jakarta text-sm mt-2">
+                {currentSemester?.name || 'No activity yet'}
+              </p>
             </div>
           </div>
         </div>
 
-        {/* Create New Schedule and Scheduler Buttons */}
+        {/* Action Buttons */}
         <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-8 lg:mb-12">
           <button
-            onClick={() => setShowScheduleForm(true)}
+            onClick={() => router.push('/scheduler')}
             className="bg-enrollmate-green hover:bg-enrollmate-green/90 text-white font-jakarta font-bold text-xl sm:text-2xl lg:text-3xl px-8 sm:px-12 lg:px-16 py-3 sm:py-4 lg:py-5 rounded-xl drop-shadow-lg transform hover:scale-105 transition-all duration-300"
           >
-            Create New Schedule
-          </button>
-          <Link
-            href="/scheduler"
-            className="bg-blue-600 hover:bg-blue-700 text-white font-jakarta font-bold text-xl sm:text-2xl lg:text-3xl px-8 sm:px-12 lg:px-16 py-3 sm:py-4 lg:py-5 rounded-xl drop-shadow-lg transform hover:scale-105 transition-all duration-300"
-          >
             Open Course Scheduler
-          </Link>
+          </button>
         </div>
 
-        {/* Recent Activity Section */}
-        <div className="bg-white rounded-3xl lg:rounded-[38px] p-6 lg:p-8 shadow-xl">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 lg:mb-8">
-            <h2 className="text-[#2B2B2B] font-jakarta font-bold text-2xl sm:text-3xl lg:text-4xl mb-4 sm:mb-0">
-              Recent Activity
-            </h2>
-            
-            {/* Filter Buttons */}
-            <div className="flex flex-wrap gap-2">
-              {filterOptions.map((filter) => (
-                <button
-                  key={filter}
-                  onClick={() => setActiveFilter(filter)}
-                  className={`px-4 py-2 rounded-lg font-jakarta font-medium text-sm transition-all duration-300 ${
-                    activeFilter === filter
-                      ? 'bg-enrollmate-green text-white shadow-md'
-                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                  }`}
+        {/* Schedules Section */}
+        <div className="bg-white/95 backdrop-blur-sm rounded-3xl lg:rounded-[38px] p-6 lg:p-8 shadow-xl">
+          <h2 className="text-[#2B2B2B] font-jakarta font-bold text-2xl sm:text-3xl lg:text-4xl mb-6">
+            📅 My Schedules
+          </h2>
+
+          {!currentSemester ? (
+            <div className="text-center py-12">
+              <div className="text-gray-500 font-jakarta text-xl mb-4">No semester selected</div>
+              <p className="text-gray-400 font-jakarta mb-6">Create your first semester to get started</p>
+              <button
+                onClick={() => setShowSemesterModal(true)}
+                className="bg-enrollmate-green hover:bg-enrollmate-green/90 text-white font-jakarta font-bold px-8 py-3 rounded-xl drop-shadow-lg transform hover:scale-105 transition-all duration-300"
+              >
+                Create New Semester
+              </button>
+            </div>
+          ) : schedules.length === 0 ? (
+            <div className="text-center py-12">
+              <div className="text-gray-500 font-jakarta text-xl mb-4">No schedules yet</div>
+              <p className="text-gray-400 font-jakarta mb-6">Create your first schedule in the Course Scheduler</p>
+              <button
+                onClick={() => router.push('/scheduler')}
+                className="bg-enrollmate-green hover:bg-enrollmate-green/90 text-white font-jakarta font-bold px-8 py-3 rounded-xl drop-shadow-lg transform hover:scale-105 transition-all duration-300"
+              >
+                Go to Course Scheduler
+              </button>
+            </div>
+          ) : (
+            <div className="space-y-6">
+              {schedules.map((schedule) => (
+                <div
+                  key={schedule.id}
+                  className="bg-gradient-to-br from-white to-gray-50 border-2 border-enrollmate-green/20 rounded-2xl p-6 hover:shadow-2xl transition-all duration-300"
                 >
-                  {filter}
-                </button>
+                  <div className="flex justify-between items-start">
+                    <div className="flex-1">
+                      <h3 className="font-jakarta font-bold text-2xl text-enrollmate-green mb-2">
+                        {schedule.name}
+                      </h3>
+                      <p className="text-gray-600 font-jakarta text-base mb-3">
+                        {schedule.getCourseCount()} course{schedule.getCourseCount() !== 1 ? 's' : ''}
+                        {schedule.courses.length > 0 && (
+                          <span className="text-gray-500"> • {schedule.getPreviewCourses()}</span>
+                        )}
+                      </p>
+                      {schedule.description && (
+                        <p className="text-gray-500 font-jakarta text-sm italic">{schedule.description}</p>
+                      )}
+                    </div>
+                    <div className="flex gap-2 flex-wrap justify-end">
+                      <Link
+                        href={`/schedule/${schedule.id}`}
+                        className="px-4 py-2 text-sm font-jakarta font-bold bg-enrollmate-green text-white rounded-xl hover:bg-enrollmate-green/90 shadow-md hover:shadow-lg transition-all duration-300"
+                      >
+                        View
+                      </Link>
+                    </div>
+                  </div>
+                </div>
               ))}
             </div>
-          </div>
-          
-          {/* Activity Table */}
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="border-b-2 border-[#D9D9D9]">
-                <tr>
-                  <th className="text-left text-[#A2A2A2] font-jakarta font-bold text-lg sm:text-xl lg:text-2xl pb-4">
-                    Activity
-                  </th>
-                  <th className="text-left text-[#A2A2A2] font-jakarta font-bold text-lg sm:text-xl lg:text-2xl pb-4">
-                    Date
-                  </th>
-                  <th className="text-left text-[#A2A2A2] font-jakarta font-bold text-lg sm:text-xl lg:text-2xl pb-4">
-                    Status
-                  </th>
-                  <th className="text-left text-[#A2A2A2] font-jakarta font-bold text-lg sm:text-xl lg:text-2xl pb-4">
-                    Type
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredActivities.length > 0 ? filteredActivities.map((activity) => (
-                  <tr key={activity.id} className="border-b border-gray-100 last:border-b-0 hover:bg-gray-50 transition-colors duration-200">
-                    <td className="py-4 text-black font-jakarta text-base sm:text-lg lg:text-xl">
-                      {activity.activity}
-                    </td>
-                    <td className="py-4 text-[#767676] font-jakarta text-base sm:text-lg lg:text-xl">
-                      {activity.date}
-                    </td>
-                    <td className="py-4">
-                      <span className={`px-3 py-1 rounded-full text-sm font-medium ${
-                        activity.status === 'Completed' 
-                          ? 'bg-green-100 text-green-800'
-                          : activity.status === 'Pending'
-                          ? 'bg-yellow-100 text-yellow-800'
-                          : 'bg-blue-100 text-blue-800'
-                      }`}>
-                        {activity.status}
-                      </span>
-                    </td>
-                    <td className="py-4">
-                      <span className={`px-2 py-1 rounded text-xs font-medium ${
-                        activity.type === 'Create' 
-                          ? 'bg-purple-100 text-purple-800'
-                          : activity.type === 'Update'
-                          ? 'bg-blue-100 text-blue-800'
-                          : activity.type === 'Fix'
-                          ? 'bg-orange-100 text-orange-800'
-                          : 'bg-gray-100 text-gray-800'
-                      }`}>
-                        {activity.type}
-                      </span>
-                    </td>
-                  </tr>
-                )) : (
-                  <tr>
-                    <td colSpan="4" className="py-8 text-center text-gray-500 font-jakarta">
-                      No activities found for the selected filter.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
+          )}
         </div>
       </main>
 
-      {/* Schedule Management Modal */}
-      {showScheduleForm && (
+      {/* Create Semester Modal */}
+      {showSemesterModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-[#F8F8F8] rounded-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
+          <div className="bg-white rounded-3xl max-w-md w-full shadow-2xl">
             <div className="p-6 lg:p-8">
-              {/* Header with back button */}
-              <div className="flex items-center mb-8">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-[#2B2B2B] font-jakarta font-bold text-2xl lg:text-3xl">
+                  Create New Semester
+                </h2>
                 <button
-                  onClick={() => setShowScheduleForm(false)}
-                  className="mr-6 p-3 bg-white rounded-full shadow-lg hover:shadow-xl transition-shadow"
+                  onClick={() => setShowSemesterModal(false)}
+                  className="text-gray-500 hover:text-gray-700 transition-colors"
                 >
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" className="text-black">
-                    <path d="M15 18L9 12L15 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                   </svg>
                 </button>
-                <h2 className="text-[#2B2B2B] font-jakarta font-bold text-3xl sm:text-4xl lg:text-5xl">
-                  Schedule Management
-                </h2>
               </div>
 
-              {/* Form */}
-              <form onSubmit={handleFormSubmit} className="space-y-6">
-                {/* Schedule Name */}
+              <form onSubmit={handleCreateSemester} className="space-y-6">
                 <div>
-                  <label className="block text-[#2B2B2B] font-jakarta font-bold text-xl lg:text-2xl mb-3">
-                    Schedule Name
+                  <label className="block text-[#2B2B2B] font-jakarta font-bold text-lg mb-3">
+                    Semester Type
+                  </label>
+                  <select
+                    value={semesterForm.semesterType}
+                    onChange={(e) => setSemesterForm({...semesterForm, semesterType: e.target.value})}
+                    className="w-full bg-white border-2 border-gray-200 rounded-xl px-4 py-3 text-base font-jakarta focus:outline-none focus:ring-2 focus:ring-enrollmate-green focus:border-enrollmate-green"
+                  >
+                    <option value="1st">1st Semester</option>
+                    <option value="2nd">2nd Semester</option>
+                    <option value="Summer">Summer</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-[#2B2B2B] font-jakarta font-bold text-lg mb-3">
+                    Year
                   </label>
                   <input
-                    type="text"
-                    name="scheduleName"
-                    value={formData.scheduleName}
-                    onChange={handleInputChange}
-                    className="w-full bg-white border border-gray-200 rounded-lg px-4 py-3 text-lg focus:outline-none focus:ring-2 focus:ring-enrollmate-green"
-                    placeholder="Enter schedule name"
+                    type="number"
+                    value={semesterForm.year}
+                    onChange={(e) => setSemesterForm({...semesterForm, year: parseInt(e.target.value)})}
+                    min="2020"
+                    max="2030"
+                    className="w-full bg-white border-2 border-gray-200 rounded-xl px-4 py-3 text-base font-jakarta focus:outline-none focus:ring-2 focus:ring-enrollmate-green focus:border-enrollmate-green"
                   />
                 </div>
 
-                {/* School Year and Semester */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <label className="block text-[#2B2B2B] font-jakarta font-bold text-xl lg:text-2xl mb-3">
-                      School Year
-                    </label>
-                    <input
-                      type="text"
-                      name="schoolYear"
-                      value={formData.schoolYear}
-                      onChange={handleInputChange}
-                      className="w-full bg-white border border-gray-200 rounded-lg px-4 py-3 text-lg focus:outline-none focus:ring-2 focus:ring-enrollmate-green"
-                      placeholder="e.g., 2023-2024"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-[#2B2B2B] font-jakarta font-bold text-xl lg:text-2xl mb-3">
-                      Semester
-                    </label>
-                    <select
-                      name="semester"
-                      value={formData.semester}
-                      onChange={handleInputChange}
-                      className="w-full bg-white border border-gray-200 rounded-lg px-4 py-3 text-lg focus:outline-none focus:ring-2 focus:ring-enrollmate-green"
-                    >
-                      <option value="">Select Semester</option>
-                      <option value="1st">1st Semester</option>
-                      <option value="2nd">2nd Semester</option>
-                      <option value="Summer">Summer</option>
-                    </select>
-                  </div>
+                <div className="bg-gray-50 rounded-xl p-4">
+                  <p className="text-gray-600 font-jakarta text-sm">
+                    <strong>Preview:</strong> {semesterForm.semesterType} Semester {semesterForm.year}
+                  </p>
                 </div>
 
-                {/* Creation Date */}
-                <div>
-                  <label className="block text-[#2B2B2B] font-jakarta font-bold text-xl lg:text-2xl mb-3">
-                    Creation Date
-                  </label>
-                  <div className="grid grid-cols-3 gap-3">
-                    <select className="bg-white border border-gray-200 rounded-lg px-3 py-3 text-lg focus:outline-none focus:ring-2 focus:ring-enrollmate-green">
-                      <option>MM</option>
-                      {Array.from({ length: 12 }, (_, i) => (
-                        <option key={i + 1} value={i + 1}>{String(i + 1).padStart(2, '0')}</option>
-                      ))}
-                    </select>
-                    <select className="bg-white border border-gray-200 rounded-lg px-3 py-3 text-lg focus:outline-none focus:ring-2 focus:ring-enrollmate-green">
-                      <option>DD</option>
-                      {Array.from({ length: 31 }, (_, i) => (
-                        <option key={i + 1} value={i + 1}>{String(i + 1).padStart(2, '0')}</option>
-                      ))}
-                    </select>
-                    <select className="bg-white border border-gray-200 rounded-lg px-3 py-3 text-lg focus:outline-none focus:ring-2 focus:ring-enrollmate-green">
-                      <option>YYYY</option>
-                      {Array.from({ length: 10 }, (_, i) => (
-                        <option key={2024 + i} value={2024 + i}>{2024 + i}</option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-
-                {/* Status and Year Level */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <label className="block text-[#2B2B2B] font-jakarta font-bold text-xl lg:text-2xl mb-3">
-                      Status
-                    </label>
-                    <select
-                      name="status"
-                      value={formData.status}
-                      onChange={handleInputChange}
-                      className="w-full bg-white border border-gray-200 rounded-lg px-4 py-3 text-lg focus:outline-none focus:ring-2 focus:ring-enrollmate-green"
-                    >
-                      <option value="Active">Active</option>
-                      <option value="Inactive">Inactive</option>
-                      <option value="Draft">Draft</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-[#2B2B2B] font-jakarta font-bold text-xl lg:text-2xl mb-3">
-                      Year Level
-                    </label>
-                    <select
-                      name="yearLevel"
-                      value={formData.yearLevel}
-                      onChange={handleInputChange}
-                      className="w-full bg-white border border-gray-200 rounded-lg px-4 py-3 text-lg focus:outline-none focus:ring-2 focus:ring-enrollmate-green"
-                    >
-                      <option value="">Select Year Level</option>
-                      <option value="1st Year">1st Year</option>
-                      <option value="2nd Year">2nd Year</option>
-                      <option value="3rd Year">3rd Year</option>
-                      <option value="4th Year">4th Year</option>
-                      <option value="5th Year">5th Year</option>
-                    </select>
-                  </div>
-                </div>
-
-                {/* Action Buttons */}
-                <div className="pt-6">
-                  <h3 className="text-[#2B2B2B] font-jakarta font-bold text-xl lg:text-2xl mb-4">
-                    Action
-                  </h3>
-                  <div className="flex flex-wrap gap-3">
-                    <button
-                      type="submit"
-                      className="bg-enrollmate-green hover:bg-enrollmate-green/90 text-white font-jakarta font-bold px-6 py-3 rounded-lg drop-shadow-lg transition-all duration-300 hover:scale-105"
-                    >
-                      Save
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => alert('Publish feature coming soon!')}
-                      className="bg-gray-400 hover:bg-gray-500 text-white font-jakarta font-bold px-6 py-3 rounded-lg drop-shadow-lg transition-all duration-300 opacity-40 hover:opacity-60"
-                    >
-                      Publish
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        if (window.confirm('Are you sure you want to delete this schedule?')) {
-                          alert('Schedule deleted!');
-                          setShowScheduleForm(false);
-                        }
-                      }}
-                      className="bg-red-500 hover:bg-red-600 text-white font-jakarta font-bold px-6 py-3 rounded-lg drop-shadow-lg transition-all duration-300 hover:scale-105"
-                    >
-                      Delete
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => alert('Edit mode activated!')}
-                      className="bg-blue-500 hover:bg-blue-600 text-white font-jakarta font-bold px-6 py-3 rounded-lg drop-shadow-lg transition-all duration-300 hover:scale-105"
-                    >
-                      Edit
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => alert('Schedule archived successfully!')}
-                      className="bg-purple-500 hover:bg-purple-600 text-white font-jakarta font-bold px-6 py-3 rounded-lg drop-shadow-lg transition-all duration-300 hover:scale-105"
-                    >
-                      Archive
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => alert('Schedule duplicated! Check your schedules list.')}
-                      className="bg-yellow-500 hover:bg-yellow-600 text-white font-jakarta font-bold px-6 py-3 rounded-lg drop-shadow-lg transition-all duration-300 hover:scale-105"
-                    >
-                      Duplicate
-                    </button>
-                  </div>
+                <div className="flex gap-3">
+                  <button
+                    type="submit"
+                    className="flex-1 bg-enrollmate-green hover:bg-enrollmate-green/90 text-white font-jakarta font-bold px-6 py-3 rounded-xl drop-shadow-lg transition-all duration-300 hover:scale-105"
+                  >
+                    Create Semester
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setShowSemesterModal(false)}
+                    className="px-6 py-3 bg-gray-200 hover:bg-gray-300 text-gray-700 font-jakarta font-bold rounded-xl transition-all duration-300"
+                  >
+                    Cancel
+                  </button>
                 </div>
               </form>
             </div>
