@@ -5,7 +5,10 @@
       "Bash(curl http://localhost:3000/scheduler)",
       "Bash(tree sample-schedules -L 2)",
       "Bash(node test-scheduler.js)",
-      "Bash(node test-large-dataset.js)"
+      "Bash(node test-large-dataset.js)",
+      "Bash(cd:*)",
+      "Bash(npm run build:*)",
+      "Read(//c/Users/Admin/Desktop/**)"
     ],
     "deny": [],
     "ask": []

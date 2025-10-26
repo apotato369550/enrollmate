@@ -43,4 +43,5 @@ next-env.d.ts
 devlog.txt
 
 # meta-prompts and implementation docs
-IMPLEMENTATION_PROMPT.md
+IMPLEMENTATION_GUIDE.md
+PLUGIN_GUIDE.md

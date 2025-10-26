@@ -9,6 +9,8 @@ import React, { useState, useEffect } from 'react';
 import { Section, ScheduleGenerator, ConflictDetector } from '../../../lib/scheduler/SchedulerEngine.js';
 import { saveUserSchedule, fetchUserSchedules, deleteUserSchedule } from '../../../lib/scheduler/schedulerAPI.js';
 import { supabase } from '../../../src/lib/supabase.js';
+import { SemesterAPI } from '../../../lib/api/semesterAPI.js';
+import { ScheduleAPI } from '../../../lib/api/scheduleAPI.js';
 
 /**
  * CourseInputPanel Component - Left side panel for adding courses and sections
@@ -632,7 +634,7 @@ function TimetableGrid({ schedule }) {
 /**
  * ResultsPanel Component - Bottom section for displaying generated schedules
  */
-function ResultsPanel({ schedules, onSaveSchedule, onCopySchedule }) {
+function ResultsPanel({ schedules, onSaveSchedule, onCopySchedule, onSaveToSemester, currentSemester }) {
   const [activeFilter, setActiveFilter] = useState('all');
   const [sortBy, setSortBy] = useState('best');
 
@@ -748,13 +750,21 @@ function ResultsPanel({ schedules, onSaveSchedule, onCopySchedule }) {
                 </div>
               </div>
 
-              <div className="flex gap-2">
+              <div className="flex flex-col gap-2">
                 <button
                   onClick={() => copyToClipboard(schedule)}
                   className="px-4 py-2 text-sm font-jakarta font-bold bg-gray-200 text-gray-700 rounded-xl hover:bg-gray-300 shadow-md hover:shadow-lg transition-all duration-300"
                 >
                   📋 Copy
                 </button>
+                {currentSemester && (
+                  <button
+                    onClick={() => onSaveToSemester?.(schedule)}
+                    className="px-4 py-2 text-sm font-jakarta font-bold bg-blue-600 text-white rounded-xl hover:bg-blue-700 shadow-md hover:shadow-lg transition-all duration-300"
+                  >
+                    📚 Save to Semester
+                  </button>
+                )}
                 <button
                   onClick={() => onSaveSchedule?.(schedule)}
                   className="px-4 py-2 text-sm font-jakarta font-bold bg-enrollmate-green text-white rounded-xl hover:bg-enrollmate-green/90 shadow-md hover:shadow-lg transition-all duration-300"
@@ -821,6 +831,8 @@ function ResultsPanel({ schedules, onSaveSchedule, onCopySchedule }) {
  * SavedSchedulesView Component - Display user's saved schedules
  */
 function SavedSchedulesView({ savedSchedules, loading, currentUser, onLoad, onDelete }) {
+  const [expandedScheduleId, setExpandedScheduleId] = useState(null);
+
   if (!currentUser) {
     return (
       <div className="bg-white/95 backdrop-blur-sm p-10 rounded-3xl shadow-2xl border border-white/20 text-center">
@@ -853,9 +865,9 @@ function SavedSchedulesView({ savedSchedules, loading, currentUser, onLoad, onDe
         💾 You have {savedSchedules.length} saved schedule{savedSchedules.length !== 1 ? 's' : ''}
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="space-y-6">
         {savedSchedules.map((savedSchedule) => (
-          <div key={savedSchedule.id} className="bg-white/95 backdrop-blur-sm border-2 border-white/30 rounded-3xl p-6 hover:shadow-2xl transition-all duration-300 hover:scale-[1.02]">
+          <div key={savedSchedule.id} className="bg-white/95 backdrop-blur-sm border-2 border-white/30 rounded-3xl p-6 hover:shadow-2xl transition-all duration-300">
             {/* Schedule Header */}
             <div className="flex justify-between items-start mb-4">
               <div className="flex-1">
@@ -872,9 +884,16 @@ function SavedSchedulesView({ savedSchedules, loading, currentUser, onLoad, onDe
                 <button
                   onClick={() => onLoad(savedSchedule)}
                   className="px-4 py-2 text-sm font-jakarta font-bold bg-enrollmate-green text-white rounded-xl hover:bg-enrollmate-green/90 shadow-md hover:shadow-lg transition-all duration-300"
-                  title="Load this schedule"
+                  title="Load this schedule into generator"
                 >
                   📂 Load
+                </button>
+                <button
+                  onClick={() => setExpandedScheduleId(expandedScheduleId === savedSchedule.id ? null : savedSchedule.id)}
+                  className="px-4 py-2 text-sm font-jakarta font-bold bg-blue-500 text-white rounded-xl hover:bg-blue-600 shadow-md hover:shadow-lg transition-all duration-300"
+                  title="View timetable"
+                >
+                  {expandedScheduleId === savedSchedule.id ? '📊 Hide' : '📊 View'}
                 </button>
                 <button
                   onClick={() => onDelete(savedSchedule.id, savedSchedule.name)}
@@ -891,27 +910,170 @@ function SavedSchedulesView({ savedSchedules, loading, currentUser, onLoad, onDe
               {savedSchedule.sections_json.map((section, idx) => (
                 <div key={idx} className="text-base font-jakarta text-gray-700 flex justify-between items-center py-1">
                   <span className="font-bold text-gray-800">{section.courseCode}</span>
-                  <span className="text-gray-600 font-medium">Group {section.group}</span>
+                  <span className="text-gray-600 font-medium">Group {section.group} • {section.schedule}</span>
                 </div>
               ))}
             </div>
 
-            {/* Mini Timetable Preview */}
-            <div className="mt-4 p-4 bg-enrollmate-green/10 rounded-xl border border-enrollmate-green/30">
-              <div className="font-jakarta font-bold text-sm text-gray-700 mb-2">📅 Schedule Preview:</div>
-              {savedSchedule.sections_json.slice(0, 3).map((section, idx) => (
-                <div key={idx} className="text-sm font-jakarta text-gray-600 truncate py-1">
-                  {section.courseCode}: {section.schedule}
-                </div>
-              ))}
-              {savedSchedule.sections_json.length > 3 && (
-                <div className="text-sm font-jakarta text-gray-500 mt-2 italic">
-                  +{savedSchedule.sections_json.length - 3} more courses...
-                </div>
-              )}
-            </div>
+            {/* Expandable Timetable */}
+            {expandedScheduleId === savedSchedule.id && (
+              <SavedScheduleTimetable schedule={savedSchedule} />
+            )}
           </div>
         ))}
+      </div>
+    </div>
+  );
+}
+
+/**
+ * SavedScheduleTimetable Component - Display timetable for a saved schedule
+ */
+function SavedScheduleTimetable({ schedule }) {
+  const days = ['M', 'T', 'W', 'Th', 'F'];
+  const dayNames = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
+
+  const courseColors = [
+    'bg-[#C8B8A8] text-gray-800',
+    'bg-[#E89B8E] text-gray-800',
+    'bg-[#B8A8C8] text-gray-800',
+    'bg-[#5FBDBD] text-gray-800',
+    'bg-[#A8D5BA] text-gray-800',
+    'bg-[#F4C2A8] text-gray-800',
+    'bg-[#98C1D9] text-gray-800',
+    'bg-[#D4A5A5] text-gray-800',
+  ];
+
+  const getCourseColor = (courseCode) => {
+    const courseIndex = schedule.sections_json.findIndex(s => s.courseCode === courseCode);
+    return courseColors[courseIndex % courseColors.length];
+  };
+
+  const getRoomNumber = (courseCode, group) => {
+    const buildingCode = courseCode.split(' ')[0];
+    const courseNum = courseCode.split(' ')[1] || '100';
+    const baseRoom = parseInt(courseNum.substring(0, 2)) || 10;
+    return `${buildingCode}${baseRoom}${group}TC`;
+  };
+
+  const parseSchedule = (scheduleStr) => {
+    const match = scheduleStr.match(/([A-Za-z]+)\s+(\d{1,2}):(\d{2})\s*(?:AM|PM)?\s*-\s*(\d{1,2}):(\d{2})\s*(?:AM|PM)?/i);
+    if (!match) return null;
+
+    const daysStr = match[1].toUpperCase();
+    const startHour = parseInt(match[2]);
+    const startMin = parseInt(match[3]);
+    const endHour = parseInt(match[4]);
+    const endMin = parseInt(match[5]);
+
+    const startTime = startHour * 60 + startMin;
+    const endTime = endHour * 60 + endMin;
+
+    return { days: daysStr.split(''), startTime, endTime };
+  };
+
+  const generateTimeSlots = () => {
+    const slots = [];
+    for (let minutes = 450; minutes <= 1050; minutes += 30) {
+      slots.push(minutes);
+    }
+    return slots;
+  };
+
+  const formatTimeRange = (startMinutes) => {
+    const formatTime = (minutes) => {
+      const hours = Math.floor(minutes / 60);
+      const mins = minutes % 60;
+      const ampm = hours >= 12 ? 'PM' : 'AM';
+      const displayHour = hours > 12 ? hours - 12 : hours === 0 ? 12 : hours;
+      return `${displayHour.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')} ${ampm}`;
+    };
+    return `${formatTime(startMinutes)} - ${formatTime(startMinutes + 30)}`;
+  };
+
+  const timeSlots = generateTimeSlots();
+
+  return (
+    <div className="mt-6 border-t-2 border-enrollmate-green/30 pt-6">
+      <h4 className="text-lg font-jakarta font-bold text-enrollmate-green mb-4">
+        <span className="text-xl">✦</span> YOUR SCHEDULE
+      </h4>
+
+      <div className="overflow-x-auto bg-white rounded-lg shadow-sm border border-gray-200">
+        <table className="w-full border-collapse">
+          <thead>
+            <tr className="bg-gray-50">
+              <th className="border border-gray-300 p-3 text-left font-jakarta font-bold text-sm text-gray-700 w-48">
+                Time
+              </th>
+              {dayNames.map((day) => (
+                <th key={day} className="border border-gray-300 p-3 text-center font-jakarta font-bold text-sm text-gray-700">
+                  {day}
+                </th>
+              ))}
+            </tr>
+          </thead>
+
+          <tbody>
+            {timeSlots.slice(0, -1).map((timeSlot) => {
+              return (
+                <tr key={timeSlot} className="hover:bg-gray-50/50 transition-colors">
+                  <td className="border border-gray-300 p-3 text-sm font-jakarta text-gray-600 bg-gray-50/30">
+                    {formatTimeRange(timeSlot)}
+                  </td>
+
+                  {days.map((day) => {
+                    const sectionsInSlot = schedule.sections_json.filter((section) => {
+                      const parsed = parseSchedule(section.schedule);
+                      if (!parsed) return false;
+                      return parsed.days.includes(day) &&
+                        parsed.startTime <= timeSlot &&
+                        parsed.endTime > timeSlot;
+                    });
+
+                    const startingSection = sectionsInSlot.find((section) => {
+                      const parsed = parseSchedule(section.schedule);
+                      return parsed && parsed.startTime === timeSlot;
+                    });
+
+                    if (startingSection) {
+                      const parsed = parseSchedule(startingSection.schedule);
+                      const duration = parsed.endTime - parsed.startTime;
+                      const rowspan = Math.ceil(duration / 30);
+
+                      return (
+                        <td
+                          key={day}
+                          rowSpan={rowspan}
+                          className={`border border-gray-300 p-4 text-center align-middle ${getCourseColor(startingSection.courseCode)}`}
+                        >
+                          <div className="font-jakarta space-y-1">
+                            <div className="font-bold text-sm leading-tight">
+                              {startingSection.courseCode} {getRoomNumber(startingSection.courseCode, startingSection.group)}
+                            </div>
+                            <div className="text-xs font-semibold opacity-90">
+                              Group {startingSection.group}
+                            </div>
+                          </div>
+                        </td>
+                      );
+                    }
+
+                    const isPartOfSpan = sectionsInSlot.length > 0;
+                    if (isPartOfSpan) {
+                      return null;
+                    }
+
+                    return (
+                      <td key={day} className="border border-gray-300 p-4 bg-white">
+                      </td>
+                    );
+                  })}
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
       </div>
     </div>
   );
@@ -945,6 +1107,10 @@ export default function SchedulerPage() {
   const [savedSchedules, setSavedSchedules] = useState([]);
   const [loadingSaved, setLoadingSaved] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
+
+  // State for semester
+  const [currentSemester, setCurrentSemester] = useState(null);
+  const [loadingSemester, setLoadingSemester] = useState(true);
 
   // Generate schedules using the OOP scheduler engine
   const generateSchedules = async () => {
@@ -1009,13 +1175,24 @@ export default function SchedulerPage() {
     }
   };
 
-  // Fetch current user on mount
+  // Fetch current user and semester on mount
   useEffect(() => {
-    const getCurrentUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      setCurrentUser(user);
+    const loadUserAndSemester = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser();
+        setCurrentUser(user);
+
+        if (user) {
+          const semester = await SemesterAPI.getCurrentSemester(user.id);
+          setCurrentSemester(semester);
+        }
+      } catch (error) {
+        console.error('Failed to load user/semester:', error);
+      } finally {
+        setLoadingSemester(false);
+      }
     };
-    getCurrentUser();
+    loadUserAndSemester();
   }, []);
 
   // Fetch saved schedules when switching to saved tab
@@ -1041,7 +1218,7 @@ export default function SchedulerPage() {
     }
   };
 
-  // Save schedule to database
+  // Save schedule to database (legacy format)
   const saveSchedule = async (schedule) => {
     if (!currentUser) {
       setMessage('❌ Please log in to save schedules');
@@ -1069,6 +1246,79 @@ export default function SchedulerPage() {
 
     } catch (error) {
       console.error('Failed to save schedule:', error);
+      setMessage(`❌ Failed to save schedule: ${error.message}`);
+    }
+  };
+
+  // Save schedule to current semester
+  const saveScheduleToSemester = async (schedule) => {
+    if (!currentUser) {
+      setMessage('❌ Please log in to save schedules');
+      return;
+    }
+
+    if (!currentSemester) {
+      setMessage('❌ Please create or select a semester first');
+      return;
+    }
+
+    try {
+      setMessage('⏳ Saving schedule to semester...');
+
+      // Count existing schedules in semester to auto-name
+      const existingSchedules = await ScheduleAPI.getSemesterSchedules(currentSemester.id);
+      const scheduleNumber = existingSchedules.length + 1;
+      const scheduleName = `Schedule ${String.fromCharCode(64 + scheduleNumber)}`; // A, B, C...
+
+      // Create schedule in semester
+      const newSchedule = await ScheduleAPI.createSchedule(
+        currentSemester.id,
+        currentUser.id,
+        scheduleName,
+        `Auto-generated on ${new Date().toLocaleDateString()}`
+      );
+
+      // Add courses to schedule
+      // For generated schedules, we need to create semester_courses entries
+      // since they don't exist yet (they come from the scheduler, not from semester catalog)
+      for (const section of schedule.selections) {
+        try {
+          // First, create a semester_course entry for this course
+          const { data: semesterCourse, error: courseError } = await supabase
+            .from('semester_courses')
+            .insert({
+              semester_id: currentSemester.id,
+              course_code: section.courseCode,
+              course_name: section.courseName,
+              section_group: section.group,
+              schedule: section.schedule,
+              enrolled_current: parseInt(section.enrolled.split('/')[0]) || 0,
+              enrolled_total: parseInt(section.enrolled.split('/')[1]) || 30,
+              room: null,
+              instructor: null,
+              status: section.status || 'OK'
+            })
+            .select()
+            .single();
+
+          if (courseError) {
+            console.warn(`Could not create semester course for ${section.courseCode}:`, courseError.message);
+            continue;
+          }
+
+          // Then add the course to the schedule
+          await ScheduleAPI.addCourseToSchedule(newSchedule.id, semesterCourse.id);
+        } catch (err) {
+          console.warn(`Failed to add ${section.courseCode} to schedule:`, err.message);
+          // Continue with next course instead of failing entirely
+        }
+      }
+
+      setMessage(`✅ Schedule saved to "${currentSemester.name}" as "${scheduleName}" with ${schedule.selections.length} courses!`);
+      setTimeout(() => setMessage(''), 4000);
+
+    } catch (error) {
+      console.error('Failed to save schedule to semester:', error);
       setMessage(`❌ Failed to save schedule: ${error.message}`);
     }
   };
@@ -1149,6 +1399,14 @@ export default function SchedulerPage() {
               className="h-12 sm:h-14 md:h-16 w-auto opacity-90 drop-shadow-sm"
             />
           </div>
+
+          {/* Semester Indicator */}
+          {!loadingSemester && currentSemester && (
+            <div className="flex items-center space-x-2 bg-white/10 backdrop-blur-sm px-4 py-2 rounded-xl border border-white/20">
+              <span className="text-white font-jakarta font-medium text-sm sm:text-base">📚</span>
+              <span className="text-white font-jakarta font-bold text-sm sm:text-base">{currentSemester.name}</span>
+            </div>
+          )}
 
           {/* Navigation */}
           <nav className="flex items-center space-x-4">
@@ -1240,6 +1498,8 @@ export default function SchedulerPage() {
               schedules={schedules}
               onSaveSchedule={saveSchedule}
               onCopySchedule={copySchedule}
+              onSaveToSemester={saveScheduleToSemester}
+              currentSemester={currentSemester}
             />
           </>
         ) : (
