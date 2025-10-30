@@ -163,7 +163,7 @@ function CourseInputPanel({ courses, setCourses }) {
     link.download = `enrollmate_courses_${new Date().toISOString().split('T')[0]}.csv`;
     document.body.appendChild(link);
     link.click();
-    document.body.removeChild(link);
+    link.remove();
     URL.revokeObjectURL(url);
   };
 
@@ -1250,6 +1250,43 @@ export default function SchedulerPage() {
     }
   };
 
+  // Helper function to find or create semester course
+  const findOrCreateSemesterCourse = async (semesterId, section) => {
+    // Query for existing course
+    const { data: existing } = await supabase
+      .from('semester_courses')
+      .select('*')
+      .eq('semester_id', semesterId)
+      .eq('course_code', section.courseCode)
+      .eq('section_group', section.group)
+      .maybeSingle();
+
+    if (existing) {
+      return existing; // Return existing course
+    }
+
+    // Create new course if doesn't exist
+    const { data: newCourse, error } = await supabase
+      .from('semester_courses')
+      .insert({
+        semester_id: semesterId,
+        course_code: section.courseCode,
+        course_name: section.courseName,
+        section_group: section.group,
+        schedule: section.schedule,
+        enrolled_current: parseInt(section.enrolled.split('/')[0]) || 0,
+        enrolled_total: parseInt(section.enrolled.split('/')[1]) || 30,
+        room: null,
+        instructor: null,
+        status: section.status || 'OK'
+      })
+      .select()
+      .single();
+
+    if (error) throw error;
+    return newCourse;
+  };
+
   // Save schedule to current semester
   const saveScheduleToSemester = async (schedule) => {
     if (!currentUser) {
@@ -1279,42 +1316,33 @@ export default function SchedulerPage() {
       );
 
       // Add courses to schedule
-      // For generated schedules, we need to create semester_courses entries
-      // since they don't exist yet (they come from the scheduler, not from semester catalog)
+      let successCount = 0;
+      let errorCount = 0;
+
       for (const section of schedule.selections) {
         try {
-          // First, create a semester_course entry for this course
-          const { data: semesterCourse, error: courseError } = await supabase
-            .from('semester_courses')
-            .insert({
-              semester_id: currentSemester.id,
-              course_code: section.courseCode,
-              course_name: section.courseName,
-              section_group: section.group,
-              schedule: section.schedule,
-              enrolled_current: parseInt(section.enrolled.split('/')[0]) || 0,
-              enrolled_total: parseInt(section.enrolled.split('/')[1]) || 30,
-              room: null,
-              instructor: null,
-              status: section.status || 'OK'
-            })
-            .select()
-            .single();
+          // Find existing or create new semester_course
+          const semesterCourse = await findOrCreateSemesterCourse(
+            currentSemester.id,
+            section
+          );
 
-          if (courseError) {
-            console.warn(`Could not create semester course for ${section.courseCode}:`, courseError.message);
-            continue;
-          }
-
-          // Then add the course to the schedule
+          // ALWAYS link to schedule (this is the fix!)
           await ScheduleAPI.addCourseToSchedule(newSchedule.id, semesterCourse.id);
+          successCount++;
+
         } catch (err) {
-          console.warn(`Failed to add ${section.courseCode} to schedule:`, err.message);
-          // Continue with next course instead of failing entirely
+          console.error(`Failed to add ${section.courseCode}:`, err.message);
+          errorCount++;
         }
       }
 
-      setMessage(`✅ Schedule saved to "${currentSemester.name}" as "${scheduleName}" with ${schedule.selections.length} courses!`);
+      // Better success message
+      if (errorCount > 0) {
+        setMessage(`⚠️ Schedule saved as "${scheduleName}" with ${successCount}/${schedule.selections.length} courses (${errorCount} failed)`);
+      } else {
+        setMessage(`✅ Schedule saved to "${currentSemester.name}" as "${scheduleName}" with ${successCount} courses!`);
+      }
       setTimeout(() => setMessage(''), 4000);
 
     } catch (error) {

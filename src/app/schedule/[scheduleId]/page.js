@@ -202,9 +202,6 @@ export default function ScheduleDetailPage() {
   const [schedule, setSchedule] = useState(null);
   const [semester, setSemester] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [showCourseModal, setShowCourseModal] = useState(false);
-  const [availableCourses, setAvailableCourses] = useState([]);
-  const [searchTerm, setSearchTerm] = useState('');
   const [user, setUser] = useState(null);
 
   useEffect(() => {
@@ -226,10 +223,6 @@ export default function ScheduleDetailPage() {
       // Load semester info
       const semesterData = await SemesterAPI.getSemesterById(scheduleData.semesterId);
       setSemester(semesterData);
-
-      // Load available courses for this semester
-      const courses = await SemesterCourseAPI.getSemesterCourses(scheduleData.semesterId);
-      setAvailableCourses(courses);
     } catch (error) {
       console.error('Failed to load schedule:', error);
       alert('Failed to load schedule. Redirecting to dashboard...');
@@ -239,35 +232,6 @@ export default function ScheduleDetailPage() {
     }
   };
 
-  const handleAddCourse = async (course) => {
-    try {
-      // Check for conflicts
-      if (schedule.hasConflict(course)) {
-        alert(`Time conflict: ${course.courseCode} conflicts with an existing course in your schedule.`);
-        return;
-      }
-
-      await ScheduleAPI.addCourseToSchedule(schedule.id, course.id);
-      await loadSchedule();
-      setShowCourseModal(false);
-      setSearchTerm('');
-    } catch (error) {
-      console.error('Failed to add course:', error);
-      alert(error.message || 'Failed to add course to schedule.');
-    }
-  };
-
-  const handleRemoveCourse = async (courseId) => {
-    if (!confirm('Remove this course from the schedule?')) return;
-
-    try {
-      await ScheduleAPI.removeCourseFromSchedule(schedule.id, courseId);
-      await loadSchedule();
-    } catch (error) {
-      console.error('Failed to remove course:', error);
-      alert('Failed to remove course from schedule.');
-    }
-  };
 
   const handleDeleteSchedule = async () => {
     if (!confirm('Are you sure you want to delete this entire schedule? This cannot be undone.')) return;
@@ -282,11 +246,6 @@ export default function ScheduleDetailPage() {
     }
   };
 
-  const filteredCourses = availableCourses.filter(course =>
-    !schedule?.courses.find(c => c.id === course.id) && // Not already in schedule
-    (searchTerm === '' || course.courseCode.toLowerCase().includes(searchTerm.toLowerCase()) ||
-     course.courseName.toLowerCase().includes(searchTerm.toLowerCase()))
-  );
 
   if (loading) {
     return (
@@ -332,20 +291,12 @@ export default function ScheduleDetailPage() {
                 {semester?.name} • {schedule.getCourseCount()} course{schedule.getCourseCount() !== 1 ? 's' : ''}
               </p>
             </div>
-            <div className="flex gap-3">
-              <button
-                onClick={() => setShowCourseModal(true)}
-                className="px-6 py-3 bg-enrollmate-green text-white font-jakarta font-bold rounded-xl hover:bg-enrollmate-green/90 shadow-lg hover:shadow-xl transition-all duration-300"
-              >
-                + Add Course
-              </button>
-              <button
-                onClick={handleDeleteSchedule}
-                className="px-6 py-3 bg-red-500 text-white font-jakarta font-bold rounded-xl hover:bg-red-600 shadow-lg hover:shadow-xl transition-all duration-300"
-              >
-                Delete Schedule
-              </button>
-            </div>
+            <button
+              onClick={handleDeleteSchedule}
+              className="px-6 py-3 bg-red-500 text-white font-jakarta font-bold rounded-xl hover:bg-red-600 shadow-lg hover:shadow-xl transition-all duration-300"
+            >
+              Delete Schedule
+            </button>
           </div>
         </div>
 
@@ -355,20 +306,14 @@ export default function ScheduleDetailPage() {
 
           {schedule.courses.length === 0 ? (
             <div className="text-center py-12">
-              <p className="text-gray-500 font-jakarta text-lg mb-4">No courses added yet</p>
-              <button
-                onClick={() => setShowCourseModal(true)}
-                className="bg-enrollmate-green hover:bg-enrollmate-green/90 text-white font-jakarta font-bold px-6 py-3 rounded-xl transition-all duration-300"
-              >
-                Add Your First Course
-              </button>
+              <p className="text-gray-500 font-jakarta text-lg">No courses in this schedule</p>
             </div>
           ) : (
             <div className="space-y-4">
               {schedule.courses.map((course) => (
                 <div
                   key={course.id}
-                  className="flex justify-between items-center bg-gray-50 rounded-xl p-4 hover:bg-gray-100 transition-colors"
+                  className="bg-gray-50 rounded-xl p-4"
                 >
                   <div className="flex-1">
                     <h3 className="font-jakarta font-bold text-lg text-gray-800">
@@ -378,12 +323,6 @@ export default function ScheduleDetailPage() {
                       Group {course.sectionGroup} • {course.schedule} • {course.getEnrollmentDisplay()}
                     </p>
                   </div>
-                  <button
-                    onClick={() => handleRemoveCourse(course.id)}
-                    className="px-4 py-2 bg-red-100 text-red-700 font-jakarta font-bold text-sm rounded-lg hover:bg-red-200 transition-colors"
-                  >
-                    Remove
-                  </button>
                 </div>
               ))}
             </div>
@@ -393,97 +332,6 @@ export default function ScheduleDetailPage() {
         {/* Timetable */}
         {schedule.courses.length > 0 && <TimetableGrid schedule={schedule} />}
       </main>
-
-      {/* Course Picker Modal */}
-      {showCourseModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-3xl max-w-4xl w-full max-h-[90vh] overflow-hidden shadow-2xl">
-            <div className="p-6 lg:p-8">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-[#2B2B2B] font-jakarta font-bold text-2xl lg:text-3xl">
-                  Add Course to Schedule
-                </h2>
-                <button
-                  onClick={() => {
-                    setShowCourseModal(false);
-                    setSearchTerm('');
-                  }}
-                  className="text-gray-500 hover:text-gray-700 transition-colors"
-                >
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              </div>
-
-              {/* Search */}
-              <div className="mb-6">
-                <input
-                  type="text"
-                  placeholder="Search by course code or name..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full bg-white border-2 border-gray-200 rounded-xl px-4 py-3 text-base font-jakarta focus:outline-none focus:ring-2 focus:ring-enrollmate-green focus:border-enrollmate-green"
-                />
-              </div>
-
-              {/* Course List */}
-              <div className="overflow-y-auto max-h-[500px] space-y-3">
-                {filteredCourses.length === 0 ? (
-                  <div className="text-center py-12">
-                    <p className="text-gray-500 font-jakarta">No courses available</p>
-                  </div>
-                ) : (
-                  filteredCourses.map((course) => {
-                    const wouldConflict = schedule.hasConflict(course);
-                    return (
-                      <div
-                        key={course.id}
-                        className={`p-4 rounded-xl border-2 transition-all ${
-                          wouldConflict
-                            ? 'bg-red-50 border-red-200'
-                            : 'bg-gray-50 border-gray-200 hover:border-enrollmate-green'
-                        }`}
-                      >
-                        <div className="flex justify-between items-start">
-                          <div className="flex-1">
-                            <h3 className="font-jakarta font-bold text-base text-gray-800">
-                              {course.courseCode} - {course.courseName}
-                            </h3>
-                            <p className="text-gray-600 font-jakarta text-sm mt-1">
-                              Group {course.sectionGroup} • {course.schedule}
-                            </p>
-                            <p className="text-gray-500 font-jakarta text-xs mt-1">
-                              {course.getEnrollmentDisplay()}
-                              {course.instructor && ` • ${course.instructor}`}
-                            </p>
-                            {wouldConflict && (
-                              <p className="text-red-600 font-jakarta font-bold text-xs mt-2">
-                                ⚠️ Time conflict with existing course
-                              </p>
-                            )}
-                          </div>
-                          <button
-                            onClick={() => handleAddCourse(course)}
-                            disabled={wouldConflict}
-                            className={`px-4 py-2 font-jakarta font-bold text-sm rounded-lg transition-all ${
-                              wouldConflict
-                                ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                                : 'bg-enrollmate-green text-white hover:bg-enrollmate-green/90'
-                            }`}
-                          >
-                            Add
-                          </button>
-                        </div>
-                      </div>
-                    );
-                  })
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

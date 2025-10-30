@@ -81,7 +81,7 @@ export default function Dashboard() {
       const totalSchedules = data.length;
       const activeSchedules = data.filter(s => s.status === 'active' || s.status === 'draft').length;
       const lastUpdated = data.length > 0
-        ? new Date(Math.max(...data.map(s => new Date(s.id)))) // Using created_at would be better
+        ? new Date(Math.max(...data.map(s => new Date(s.updated_at || s.created_at))))
         : null;
 
       setStats({
