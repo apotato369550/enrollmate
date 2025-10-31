@@ -7,7 +7,7 @@ export default function Home() {
           {/* Logo */}
           <div className="flex items-center">
             <img 
-              src="https://api.builder.io/api/v1/image/assets/TEMP/152290938133b46f59604e8cf4419542cb66556d?width=592"
+              src="/assets/images/logo-or-icon.png"
               alt="EnrollMate"
               className="h-10 sm:h-12 md:h-14 lg:h-16 w-auto opacity-90 drop-shadow-sm"
             />
@@ -67,7 +67,7 @@ export default function Home() {
             <div className="flex justify-center lg:justify-end">
               <div className="relative">
                 <img 
-                  src="https://api.builder.io/api/v1/image/assets/TEMP/98ffc2bac3f2b04d98eef7d0401e4531df775981?width=1594"
+                  src="/assets/images/hero-image.png"
                   alt="Calendar with decorative elements"
                   className="w-full max-w-md lg:max-w-lg xl:max-w-xl h-auto drop-shadow-2xl"
                   style={{
@@ -104,7 +104,7 @@ export default function Home() {
                     <div className="mb-6">
                       {/* Use Figma-imported asset for Smart-Filtering */}
                       <img
-                        src="https://api.builder.io/api/v1/image/assets/TEMP/3aba81778dc8d1c8c5675e6bc79feb8019bb3a95?width=522"
+                        src="/assets/images/feature-1.png"
                         alt="Smart Filtering"
                         className="w-28 h-28 lg:w-36 lg:h-36 mx-auto object-contain drop-shadow-xl"
                       />
@@ -133,7 +133,7 @@ export default function Home() {
                     <div className="mb-6">
                       {/* Use Figma-imported asset for Time-Preferences */}
                       <img
-                        src="https://api.builder.io/api/v1/image/assets/TEMP/2e05f22aebfd912d7072b4bd4fde237bf44fd34a?width=582"
+                        src="/assets/images/feature-2.png"
                         alt="Time Preferences"
                         className="w-28 h-28 lg:w-36 lg:h-36 mx-auto object-contain drop-shadow-xl"
                       />
@@ -162,7 +162,7 @@ export default function Home() {
                     <div className="mb-6">
                       {/* Use Figma-imported asset for Multiple Options */}
                       <img
-                        src="https://api.builder.io/api/v1/image/assets/TEMP/6b3222f455c7a96aef7ad995d1f455ed6784192a?width=680"
+                        src="/assets/images/feature-3.png"
                         alt="Multiple Options"
                         className="w-32 h-32 lg:w-40 lg:h-40 mx-auto object-contain drop-shadow-xl"
                       />

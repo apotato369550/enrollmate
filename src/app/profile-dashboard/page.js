@@ -54,7 +54,7 @@ export default function ProfileDashboard() {
           {/* Logo */}
           <div className="flex items-center">
             <img 
-              src="https://api.builder.io/api/v1/image/assets/TEMP/152290938133b46f59604e8cf4419542cb66556d?width=592"
+              src="/assets/images/logo-or-icon.png"
               alt="EnrollMate"
               className="h-12 sm:h-14 md:h-16 lg:h-18 w-auto opacity-90 drop-shadow-sm"
             />
@@ -107,7 +107,7 @@ export default function ProfileDashboard() {
                 <div className="relative">
                   <div className="w-48 h-48 md:w-64 md:h-64 lg:w-72 lg:h-72 rounded-full overflow-hidden border-4 border-[#A2A2A2] shadow-xl">
                     <img 
-                      src="https://api.builder.io/api/v1/image/assets/TEMP/680fcbda4df1115fe0357aadd4ff2ef39f8fb0f6?width=596"
+                      src="/assets/images/default-avatar.png"
                       alt="Profile Picture"
                       className="w-full h-full object-cover"
                     />

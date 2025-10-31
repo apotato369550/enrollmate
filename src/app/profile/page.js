@@ -82,7 +82,7 @@ export default function Profile() {
     // Upload to Supabase storage
     // Note: Ensure a storage bucket named 'avatars' exists in Supabase with public access
     const fileExt = file.name.split('.').pop();
-    const fileName = `${user.id}/${user.id}.${fileExt}`;
+    const fileName = `${user.id}.${fileExt}`;
     console.log('=== AVATAR UPLOAD DEBUG INFO ===');
     console.log('Attempting upload to bucket "avatars" with fileName:', fileName);
     console.log('User ID:', user.id);
@@ -336,7 +336,7 @@ export default function Profile() {
           className="absolute inset-0 opacity-60"
           style={{
             backgroundImage:
-              "url('https://api.builder.io/api/v1/image/assets/TEMP/064bbd9f6db011ffd5c822938c930fa2370a9b77?width=5170')",
+              "url('/assets/images/login-background.png')",
             backgroundSize: 'cover',
             backgroundPosition: 'center',
             backgroundRepeat: 'no-repeat',
@@ -357,7 +357,7 @@ export default function Profile() {
         className="absolute inset-0 opacity-60"
         style={{
           backgroundImage:
-            "url('https://api.builder.io/api/v1/image/assets/TEMP/064bbd9f6db011ffd5c822938c930fa2370a9b77?width=5170')",
+            "url('/assets/images/login-background.png')",
           backgroundSize: 'cover',
           backgroundPosition: 'center',
           backgroundRepeat: 'no-repeat',
@@ -391,7 +391,7 @@ export default function Profile() {
                   <div className="relative">
                     <div className="w-40 h-40 md:w-48 md:h-48 lg:w-56 lg:h-56 rounded-full ring-4 ring-white shadow-xl overflow-hidden">
                       <img
-                        src={isEditing ? (formData.avatar_url || 'https://api.builder.io/api/v1/image/assets/TEMP/680fcbda4df1115fe0357aadd4ff2ef39f8fb0f6?width=596') : (profile?.avatar_url || 'https://api.builder.io/api/v1/image/assets/TEMP/680fcbda4df1115fe0357aadd4ff2ef39f8fb0f6?width=596')}
+                        src={isEditing ? (formData.avatar_url || '/assets/images/default-avatar.png') : (profile?.avatar_url || '/assets/images/default-avatar.png')}
                         alt="Profile"
                         className="w-full h-full object-cover"
                       />

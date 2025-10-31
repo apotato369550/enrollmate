@@ -6,6 +6,7 @@ import { supabase } from '../../../../src/lib/supabase';
 import { ScheduleAPI } from '../../../../lib/api/scheduleAPI';
 import { SemesterCourseAPI } from '../../../../lib/api/semesterCourseAPI';
 import { SemesterAPI } from '../../../../lib/api/semesterAPI';
+import PDFExporter from '../../../../lib/utils/pdfExporter';
 
 // Reuse TimetableGrid from scheduler
 function TimetableGrid({ schedule }) {
@@ -262,7 +263,7 @@ export default function ScheduleDetailPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 sm:h-24 flex items-center justify-between">
           <div className="flex items-center">
             <img
-              src="https://api.builder.io/api/v1/image/assets/TEMP/152290938133b46f59604e8cf4419542cb66556d?width=592"
+              src="/assets/images/logo-or-icon.png"
               alt="EnrollMate"
               className="h-12 sm:h-14 md:h-16 w-auto opacity-90 drop-shadow-sm"
             />
@@ -291,12 +292,28 @@ export default function ScheduleDetailPage() {
                 {semester?.name} • {schedule.getCourseCount()} course{schedule.getCourseCount() !== 1 ? 's' : ''}
               </p>
             </div>
-            <button
-              onClick={handleDeleteSchedule}
-              className="px-6 py-3 bg-red-500 text-white font-jakarta font-bold rounded-xl hover:bg-red-600 shadow-lg hover:shadow-xl transition-all duration-300"
-            >
-              Delete Schedule
-            </button>
+            <div className="flex gap-3">
+              <button
+                onClick={() => {
+                  if (schedule && schedule.courses) {
+                    PDFExporter.exportSchedule({
+                      name: schedule.name,
+                      courses: schedule.courses
+                    });
+                  }
+                }}
+                className="px-6 py-3 bg-purple-600 text-white font-jakarta font-bold rounded-xl hover:bg-purple-700 shadow-lg hover:shadow-xl transition-all duration-300"
+                title="Download schedule as PDF"
+              >
+                📄 Export PDF
+              </button>
+              <button
+                onClick={handleDeleteSchedule}
+                className="px-6 py-3 bg-red-500 text-white font-jakarta font-bold rounded-xl hover:bg-red-600 shadow-lg hover:shadow-xl transition-all duration-300"
+              >
+                Delete Schedule
+              </button>
+            </div>
           </div>
         </div>
 

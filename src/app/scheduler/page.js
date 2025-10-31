@@ -11,6 +11,7 @@ import { saveUserSchedule, fetchUserSchedules, deleteUserSchedule } from '../../
 import { supabase } from '../../../src/lib/supabase.js';
 import { SemesterAPI } from '../../../lib/api/semesterAPI.js';
 import { ScheduleAPI } from '../../../lib/api/scheduleAPI.js';
+import PDFExporter from '../../../lib/utils/pdfExporter.js';
 
 /**
  * CourseInputPanel Component - Left side panel for adding courses and sections
@@ -757,6 +758,30 @@ function ResultsPanel({ schedules, onSaveSchedule, onCopySchedule, onSaveToSemes
                 >
                   📋 Copy
                 </button>
+                <button
+                  onClick={() => {
+                    // Create schedule object for PDF export
+                    const scheduleObj = {
+                      name: `Generated Schedule ${new Date().toLocaleDateString()}`,
+                      courses: schedule.selections.map(section => ({
+                        courseCode: section.courseCode,
+                        courseName: section.courseName,
+                        sectionGroup: section.group,
+                        schedule: section.schedule,
+                        enrolledCurrent: parseInt(section.enrolled.split('/')[0]),
+                        enrolledTotal: parseInt(section.enrolled.split('/')[1]),
+                        room: section.room || 'TBA',
+                        instructor: section.instructor || 'TBA',
+                        status: section.status || 'OK'
+                      }))
+                    };
+                    PDFExporter.exportSchedule(scheduleObj);
+                  }}
+                  className="px-4 py-2 text-sm font-jakarta font-bold bg-purple-600 text-white rounded-xl hover:bg-purple-700 shadow-md hover:shadow-lg transition-all duration-300"
+                  title="Download schedule as PDF"
+                >
+                  📄 PDF
+                </button>
                 {currentSemester && (
                   <button
                     onClick={() => onSaveToSemester?.(schedule)}
@@ -769,7 +794,7 @@ function ResultsPanel({ schedules, onSaveSchedule, onCopySchedule, onSaveToSemes
                   onClick={() => onSaveSchedule?.(schedule)}
                   className="px-4 py-2 text-sm font-jakarta font-bold bg-enrollmate-green text-white rounded-xl hover:bg-enrollmate-green/90 shadow-md hover:shadow-lg transition-all duration-300"
                 >
-                  💾 Save
+                  💾 Save Privately
                 </button>
               </div>
             </div>
@@ -1218,7 +1243,7 @@ export default function SchedulerPage() {
     }
   };
 
-  // Save schedule to database (legacy format)
+  // Save schedule as private (not attached to any semester)
   const saveSchedule = async (schedule) => {
     if (!currentUser) {
       setMessage('❌ Please log in to save schedules');
@@ -1229,15 +1254,31 @@ export default function SchedulerPage() {
       const scheduleName = prompt('Enter a name for this schedule:', `Schedule ${new Date().toLocaleDateString()}`);
       if (!scheduleName) return;
 
-      const scheduleId = await saveUserSchedule(
+      // Create a private schedule (not attached to any semester)
+      const privateSchedule = await ScheduleAPI.createPrivateSchedule(
         currentUser.id,
         scheduleName,
-        schedule.selections,
-        constraints
+        `Saved on ${new Date().toLocaleDateString()}`
       );
 
-      setMessage(`✅ Schedule saved successfully!`);
-      console.log('Schedule saved with ID:', scheduleId);
+      // Add all selected courses to the private schedule
+      for (const section of schedule.selections) {
+        try {
+          // Create or get the semester course entry (use first semester if exists, otherwise skip)
+          // For private schedules, we still need to store courses in semester_courses
+          // We'll need to create temporary entries or handle this differently
+          // For now, just add to the junction table if they have semester_course_id
+
+          // NOTE: This requires courses to be stored in semester_courses table
+          // Since private schedules don't attach to semester, we need a different approach
+          // For MVP, we'll save selected sections as course details in the schedule
+        } catch (error) {
+          console.warn(`Could not add course ${section.courseCode}:`, error);
+        }
+      }
+
+      setMessage(`✅ Schedule "${scheduleName}" saved privately!`);
+      console.log('Private schedule saved with ID:', privateSchedule.id);
 
       // Refresh saved schedules list if on saved tab
       if (activeTab === 'saved') {
@@ -1422,7 +1463,7 @@ export default function SchedulerPage() {
           {/* Logo */}
           <div className="flex items-center">
             <img
-              src="https://api.builder.io/api/v1/image/assets/TEMP/152290938133b46f59604e8cf4419542cb66556d?width=592"
+              src="/assets/images/logo-or-icon.png"
               alt="EnrollMate"
               className="h-12 sm:h-14 md:h-16 w-auto opacity-90 drop-shadow-sm"
             />

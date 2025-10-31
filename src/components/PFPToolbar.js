@@ -34,7 +34,7 @@ export default function PFPToolbar({ user, profile }) {
         className="w-10 h-10 sm:w-12 sm:h-12 rounded-full overflow-hidden bg-white/20 border-2 border-white/30 hover:border-white/50 transition-all duration-300 hover:scale-105"
       >
         <img 
-          src="https://api.builder.io/api/v1/image/assets/TEMP/680fcbda4df1115fe0357aadd4ff2ef39f8fb0f6?width=596"
+          src="/assets/images/default-avatar.png"
           alt="Profile"
           className="w-full h-full object-cover"
         />

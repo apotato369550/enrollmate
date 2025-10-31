@@ -1,14 +1,14 @@
 {
   "permissions": {
     "allow": [
-      "Bash(npm run dev)",
-      "Bash(curl http://localhost:3000/scheduler)",
-      "Bash(tree sample-schedules -L 2)",
-      "Bash(node test-scheduler.js)",
-      "Bash(node test-large-dataset.js)",
-      "Bash(cd:*)",
-      "Bash(npm run build:*)",
-      "Read(//c/Users/Admin/Desktop/**)"
+      "Bash(npm run migrate:up:*)",
+      "Bash(npm run:*)",
+      "Bash(xargs grep:*)",
+      "Bash(grep -i supabase|project .env)",
+      "Bash(npm install:*)",
+      "Bash(node scripts/download-assets.js:*)",
+      "Bash(node scripts/create-placeholder-images.js:*)",
+      "Bash(xargs sed:*)"
     ],
     "deny": [],
     "ask": []

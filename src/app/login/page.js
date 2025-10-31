@@ -89,7 +89,7 @@ export default function LoginPage() {
         className="absolute inset-0 opacity-56"
         style={{
           backgroundImage:
-            "url('https://api.builder.io/api/v1/image/assets/TEMP/064bbd9f6db011ffd5c822938c930fa2370a9b77?width=5170')",
+            "url('/assets/images/login-background.png')",
           backgroundSize: 'cover',
           backgroundPosition: 'center',
           backgroundRepeat: 'no-repeat',
@@ -102,7 +102,7 @@ export default function LoginPage() {
           <div className="flex justify-center relative z-20 -mb-12 sm:-mb-16">
             <div className="rounded-full p-3 bg-white/95 border-4 border-[#9DF313] inline-flex items-center justify-center shadow-md">
               <img
-                src="https://api.builder.io/api/v1/image/assets/TEMP/0ab06d5c74e85b8f2137cf321b9d07d9b7c27912?width=532"
+                src="/assets/images/login-illustration.png"
                 alt="EnrollMate"
                 className="w-28 h-28 sm:w-36 sm:h-36 object-contain"
               />

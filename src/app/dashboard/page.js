@@ -188,7 +188,7 @@ export default function Dashboard() {
           {/* Logo */}
           <div className="flex items-center">
             <img
-              src="https://api.builder.io/api/v1/image/assets/TEMP/152290938133b46f59604e8cf4419542cb66556d?width=592"
+              src="/assets/images/logo-or-icon.png"
               alt="EnrollMate"
               className="h-12 sm:h-14 md:h-16 lg:h-18 w-auto opacity-90 drop-shadow-sm"
             />
@@ -209,7 +209,7 @@ export default function Dashboard() {
                 className="w-12 h-12 sm:w-14 sm:h-14 rounded-full overflow-hidden border-2 border-white shadow-lg hover:scale-105 transition-transform duration-200"
               >
                 <img
-                  src="https://api.builder.io/api/v1/image/assets/TEMP/680fcbda4df1115fe0357aadd4ff2ef39f8fb0f6?width=596"
+                  src="/assets/images/default-avatar.png"
                   alt="Profile"
                   className="w-full h-full object-cover"
                 />
@@ -327,6 +327,12 @@ export default function Dashboard() {
             className="bg-enrollmate-green hover:bg-enrollmate-green/90 text-white font-jakarta font-bold text-xl sm:text-2xl lg:text-3xl px-8 sm:px-12 lg:px-16 py-3 sm:py-4 lg:py-5 rounded-xl drop-shadow-lg transform hover:scale-105 transition-all duration-300"
           >
             Open Course Scheduler
+          </button>
+          <button
+            onClick={() => router.push('/courses')}
+            className="bg-blue-600 hover:bg-blue-700 text-white font-jakarta font-bold text-lg sm:text-xl lg:text-2xl px-6 sm:px-10 lg:px-14 py-3 sm:py-4 lg:py-5 rounded-xl drop-shadow-lg transform hover:scale-105 transition-all duration-300"
+          >
+            📚 My Course Library
           </button>
         </div>
 
