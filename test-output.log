@@ -1,0 +1,239 @@
+[36m
+========================================[0m
+[36mENROLLMATE VALIDATION TEST SUITE[0m
+[36m========================================[0m
+[36m
+--- Phase 1: Environment Validation ---[0m
+[36m
+Testing: Supabase Connection...[0m
+(node:16157) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///home/jay/Desktop/Coding%20Stuff/enrollmate/test-validation.js is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /home/jay/Desktop/Coding Stuff/enrollmate/package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+[31m✗ FAILED: Supabase Connection[0m
+[31m  Error: Connection failed: Use of aggregate functions is not allowed[0m
+[36m
+--- Phase 2: Semester API Tests ---[0m
+[36m
+Testing: SemesterAPI.createSemester()...[0m
+[31m✗ FAILED: SemesterAPI.createSemester()[0m
+[31m  Error: Failed to create semester: invalid input syntax for type uuid: "test-user-1762019662682"[0m
+[36m
+Testing: SemesterAPI.getSemesterById()...[0m
+[31m✗ FAILED: SemesterAPI.getSemesterById()[0m
+[31m  Error: No semester ID from previous test[0m
+[36m
+Testing: SemesterAPI.getUserSemesters()...[0m
+[31m✗ FAILED: SemesterAPI.getUserSemesters()[0m
+[31m  Error: Failed to fetch semesters: invalid input syntax for type uuid: "test-user-1762019662682"[0m
+[36m
+Testing: SemesterAPI.updateSemester()...[0m
+[31m✗ FAILED: SemesterAPI.updateSemester()[0m
+[31m  Error: No semester ID from previous test[0m
+[36m
+--- Phase 3: Semester Course API Tests ---[0m
+[36m
+Testing: SemesterCourseAPI.addCourseToSemester() - CIS 3100...[0m
+[31m✗ FAILED: SemesterCourseAPI.addCourseToSemester() - CIS 3100[0m
+[31m  Error: No semester ID[0m
+[36m
+Testing: SemesterCourseAPI.addCourseToSemester() - MATH 2010...[0m
+[31m✗ FAILED: SemesterCourseAPI.addCourseToSemester() - MATH 2010[0m
+[31m  Error: No semester ID[0m
+[36m
+Testing: SemesterCourseAPI.getSemesterCourses()...[0m
+[31m✗ FAILED: SemesterCourseAPI.getSemesterCourses()[0m
+[31m  Error: No semester ID[0m
+[36m
+Testing: SemesterCourseAPI.getCourseById()...[0m
+[31m✗ FAILED: SemesterCourseAPI.getCourseById()[0m
+[31m  Error: No course IDs from previous tests[0m
+[36m
+Testing: SemesterCourseAPI.updateCourse()...[0m
+[31m✗ FAILED: SemesterCourseAPI.updateCourse()[0m
+[31m  Error: No course IDs[0m
+[36m
+Testing: SemesterCourseAPI.searchCourses()...[0m
+[31m✗ FAILED: SemesterCourseAPI.searchCourses()[0m
+[31m  Error: No semester ID[0m
+[36m
+Testing: SemesterCourseAPI.bulkImportCourses()...[0m
+[31m✗ FAILED: SemesterCourseAPI.bulkImportCourses()[0m
+[31m  Error: No semester ID[0m
+[36m
+--- Phase 4: Schedule API Tests ---[0m
+[36m
+Testing: ScheduleAPI.createSchedule()...[0m
+[31m✗ FAILED: ScheduleAPI.createSchedule()[0m
+[31m  Error: No semester ID[0m
+[36m
+Testing: ScheduleAPI.getScheduleById()...[0m
+[31m✗ FAILED: ScheduleAPI.getScheduleById()[0m
+[31m  Error: No schedule ID[0m
+[36m
+Testing: ScheduleAPI.addCourseToSchedule()...[0m
+[31m✗ FAILED: ScheduleAPI.addCourseToSchedule()[0m
+[31m  Error: Missing schedule or course ID[0m
+[36m
+Testing: ScheduleAPI.getScheduleCourses()...[0m
+[31m✗ FAILED: ScheduleAPI.getScheduleCourses()[0m
+[31m  Error: No schedule ID[0m
+[36m
+Testing: ScheduleAPI.updateSchedule()...[0m
+[31m✗ FAILED: ScheduleAPI.updateSchedule()[0m
+[31m  Error: No schedule ID[0m
+[36m
+Testing: ScheduleAPI.getSemesterSchedules()...[0m
+[31m✗ FAILED: ScheduleAPI.getSemesterSchedules()[0m
+[31m  Error: No semester ID[0m
+[36m
+Testing: ScheduleAPI.duplicateSchedule()...[0m
+[31m✗ FAILED: ScheduleAPI.duplicateSchedule()[0m
+[31m  Error: No schedule ID[0m
+[36m
+Testing: ScheduleAPI.removeCourseFromSchedule()...[0m
+[31m✗ FAILED: ScheduleAPI.removeCourseFromSchedule()[0m
+[31m  Error: Missing schedule or course ID[0m
+[36m
+--- Phase 5: User Course API Tests ---[0m
+[36m
+Testing: UserCourseAPI.saveCourse()...[0m
+Error counting user courses: {
+  code: 'PGRST205',
+  details: null,
+  hint: "Perhaps you meant the table 'public.semester_courses'",
+  message: "Could not find the table 'public.user_courses' in the schema cache"
+}
+Error saving course: {
+  code: 'PGRST205',
+  details: null,
+  hint: "Perhaps you meant the table 'public.semester_courses'",
+  message: "Could not find the table 'public.user_courses' in the schema cache"
+}
+[31m✗ FAILED: UserCourseAPI.saveCourse()[0m
+[31m  Error: Could not find the table 'public.user_courses' in the schema cache[0m
+[36m
+Testing: UserCourseAPI.getUserCourses()...[0m
+Error fetching user courses: {
+  code: 'PGRST205',
+  details: null,
+  hint: "Perhaps you meant the table 'public.semester_courses'",
+  message: "Could not find the table 'public.user_courses' in the schema cache"
+}
+[31m✗ FAILED: UserCourseAPI.getUserCourses()[0m
+[31m  Error: Could not find the table 'public.user_courses' in the schema cache[0m
+[36m
+Testing: UserCourseAPI.getUserCourseCount()...[0m
+Error counting user courses: {
+  code: 'PGRST205',
+  details: null,
+  hint: "Perhaps you meant the table 'public.semester_courses'",
+  message: "Could not find the table 'public.user_courses' in the schema cache"
+}
+[31m✗ FAILED: UserCourseAPI.getUserCourseCount()[0m
+[31m  Error: Could not find the table 'public.user_courses' in the schema cache[0m
+[36m
+Testing: UserCourseAPI.getCoursesBySource()...[0m
+Error fetching courses by source: {
+  code: 'PGRST205',
+  details: null,
+  hint: "Perhaps you meant the table 'public.semester_courses'",
+  message: "Could not find the table 'public.user_courses' in the schema cache"
+}
+[31m✗ FAILED: UserCourseAPI.getCoursesBySource()[0m
+[31m  Error: Could not find the table 'public.user_courses' in the schema cache[0m
+[36m
+Testing: UserCourseAPI.searchCourses()...[0m
+Error searching courses: {
+  code: 'PGRST205',
+  details: null,
+  hint: "Perhaps you meant the table 'public.semester_courses'",
+  message: "Could not find the table 'public.user_courses' in the schema cache"
+}
+[31m✗ FAILED: UserCourseAPI.searchCourses()[0m
+[31m  Error: Could not find the table 'public.user_courses' in the schema cache[0m
+[36m
+Testing: UserCourseAPI.getCourseStats()...[0m
+Error getting course statistics: {
+  code: 'PGRST205',
+  details: null,
+  hint: "Perhaps you meant the table 'public.semester_courses'",
+  message: "Could not find the table 'public.user_courses' in the schema cache"
+}
+[31m✗ FAILED: UserCourseAPI.getCourseStats()[0m
+[31m  Error: Could not find the table 'public.user_courses' in the schema cache[0m
+[36m
+--- Phase 6: Private Schedule Tests ---[0m
+[36m
+Testing: ScheduleAPI.createPrivateSchedule()...[0m
+[31m✗ FAILED: ScheduleAPI.createPrivateSchedule()[0m
+[31m  Error: Failed to create private schedule: Could not find the 'is_private' column of 'schedules' in the schema cache[0m
+[36m
+Testing: ScheduleAPI.getUserPrivateSchedules()...[0m
+[31m✗ FAILED: ScheduleAPI.getUserPrivateSchedules()[0m
+[31m  Error: Failed to fetch private schedules: column schedules.is_private does not exist[0m
+[36m
+--- Phase 7: Cleanup Tests ---[0m
+[36m
+Testing: SemesterCourseAPI.deleteCourse()...[0m
+[31m✗ FAILED: SemesterCourseAPI.deleteCourse()[0m
+[31m  Error: No course IDs to delete[0m
+[36m
+Testing: ScheduleAPI.deleteSchedule()...[0m
+[31m✗ FAILED: ScheduleAPI.deleteSchedule()[0m
+[31m  Error: No duplicate schedule ID[0m
+[36m
+Testing: UserCourseAPI.deleteCourse()...[0m
+[31m✗ FAILED: UserCourseAPI.deleteCourse()[0m
+[31m  Error: No user course ID[0m
+[36m
+Testing: SemesterAPI.archiveSemester()...[0m
+[31m✗ FAILED: SemesterAPI.archiveSemester()[0m
+[31m  Error: No semester ID[0m
+[36m
+Testing: SemesterAPI.deleteSemester()...[0m
+[31m✗ FAILED: SemesterAPI.deleteSemester()[0m
+[31m  Error: No semester ID[0m
+[36m
+========================================[0m
+[36mTEST SUITE COMPLETE[0m
+[36m========================================[0m
+[36m
+Total Tests Run: 33[0m
+[32mPassed: 0[0m
+[31mFailed: 33[0m
+[31m
+Failed Tests:[0m
+[31m  - Supabase Connection: Connection failed: Use of aggregate functions is not allowed[0m
+[31m  - SemesterAPI.createSemester(): Failed to create semester: invalid input syntax for type uuid: "test-user-1762019662682"[0m
+[31m  - SemesterAPI.getSemesterById(): No semester ID from previous test[0m
+[31m  - SemesterAPI.getUserSemesters(): Failed to fetch semesters: invalid input syntax for type uuid: "test-user-1762019662682"[0m
+[31m  - SemesterAPI.updateSemester(): No semester ID from previous test[0m
+[31m  - SemesterCourseAPI.addCourseToSemester() - CIS 3100: No semester ID[0m
+[31m  - SemesterCourseAPI.addCourseToSemester() - MATH 2010: No semester ID[0m
+[31m  - SemesterCourseAPI.getSemesterCourses(): No semester ID[0m
+[31m  - SemesterCourseAPI.getCourseById(): No course IDs from previous tests[0m
+[31m  - SemesterCourseAPI.updateCourse(): No course IDs[0m
+[31m  - SemesterCourseAPI.searchCourses(): No semester ID[0m
+[31m  - SemesterCourseAPI.bulkImportCourses(): No semester ID[0m
+[31m  - ScheduleAPI.createSchedule(): No semester ID[0m
+[31m  - ScheduleAPI.getScheduleById(): No schedule ID[0m
+[31m  - ScheduleAPI.addCourseToSchedule(): Missing schedule or course ID[0m
+[31m  - ScheduleAPI.getScheduleCourses(): No schedule ID[0m
+[31m  - ScheduleAPI.updateSchedule(): No schedule ID[0m
+[31m  - ScheduleAPI.getSemesterSchedules(): No semester ID[0m
+[31m  - ScheduleAPI.duplicateSchedule(): No schedule ID[0m
+[31m  - ScheduleAPI.removeCourseFromSchedule(): Missing schedule or course ID[0m
+[31m  - UserCourseAPI.saveCourse(): Could not find the table 'public.user_courses' in the schema cache[0m
+[31m  - UserCourseAPI.getUserCourses(): Could not find the table 'public.user_courses' in the schema cache[0m
+[31m  - UserCourseAPI.getUserCourseCount(): Could not find the table 'public.user_courses' in the schema cache[0m
+[31m  - UserCourseAPI.getCoursesBySource(): Could not find the table 'public.user_courses' in the schema cache[0m
+[31m  - UserCourseAPI.searchCourses(): Could not find the table 'public.user_courses' in the schema cache[0m
+[31m  - UserCourseAPI.getCourseStats(): Could not find the table 'public.user_courses' in the schema cache[0m
+[31m  - ScheduleAPI.createPrivateSchedule(): Failed to create private schedule: Could not find the 'is_private' column of 'schedules' in the schema cache[0m
+[31m  - ScheduleAPI.getUserPrivateSchedules(): Failed to fetch private schedules: column schedules.is_private does not exist[0m
+[31m  - SemesterCourseAPI.deleteCourse(): No course IDs to delete[0m
+[31m  - ScheduleAPI.deleteSchedule(): No duplicate schedule ID[0m
+[31m  - UserCourseAPI.deleteCourse(): No user course ID[0m
+[31m  - SemesterAPI.archiveSemester(): No semester ID[0m
+[31m  - SemesterAPI.deleteSemester(): No semester ID[0m
