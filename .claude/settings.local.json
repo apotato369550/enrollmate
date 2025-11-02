@@ -8,7 +8,8 @@
       "Bash(npm install:*)",
       "Bash(node scripts/download-assets.js:*)",
       "Bash(node scripts/create-placeholder-images.js:*)",
-      "Bash(xargs sed:*)"
+      "Bash(xargs sed:*)",
+      "Bash(tree:*)"
     ],
     "deny": [],
     "ask": []
