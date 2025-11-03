@@ -209,7 +209,7 @@ export default function Dashboard() {
                 className="w-12 h-12 sm:w-14 sm:h-14 rounded-full overflow-hidden border-2 border-white shadow-lg hover:scale-105 transition-transform duration-200"
               >
                 <img
-                  src="/assets/images/default-avatar.png"
+                  src="/assets/images/feature-1.png"
                   alt="Profile"
                   className="w-full h-full object-cover"
                 />

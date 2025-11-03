@@ -165,7 +165,7 @@ export default function SignupPage() {
           <div className="flex justify-center relative z-20 -mb-14 sm:-mb-20">
             <div className="rounded-full p-3 bg-white/95 border-4 border-[#9DF313] inline-flex items-center justify-center shadow-md">
               <img
-                src="/assets/images/login-illustration.png"
+                src="/assets/images/logo-or-icon.png"
                 alt="EnrollMate"
                 className="w-32 h-32 sm:w-44 sm:h-44 object-contain"
               />

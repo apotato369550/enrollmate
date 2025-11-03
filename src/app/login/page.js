@@ -102,7 +102,7 @@ export default function LoginPage() {
           <div className="flex justify-center relative z-20 -mb-12 sm:-mb-16">
             <div className="rounded-full p-3 bg-white/95 border-4 border-[#9DF313] inline-flex items-center justify-center shadow-md">
               <img
-                src="/assets/images/login-illustration.png"
+                src="/assets/images/logo-or-icon.png"
                 alt="EnrollMate"
                 className="w-28 h-28 sm:w-36 sm:h-36 object-contain"
               />
