@@ -11,18 +11,152 @@ import { saveUserSchedule, fetchUserSchedules, deleteUserSchedule } from '../../
 import { supabase } from '../../../src/lib/supabase.js';
 import { SemesterAPI } from '../../../lib/api/semesterAPI.js';
 import { ScheduleAPI } from '../../../lib/api/scheduleAPI.js';
+import UserCourseAPI from '../../../lib/api/userCourseAPI.js';
 import PDFExporter from '../../../lib/utils/pdfExporter.js';
+
+/**
+ * CourseLibraryModal Component - Modal for importing courses from user's library
+ */
+function CourseLibraryModal({ userId, onImport, onClose }) {
+  const [libraryCourses, setLibraryCourses] = useState([]);
+  const [selectedCourses, setSelectedCourses] = useState(new Set());
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
+
+  useEffect(() => {
+    const loadCourses = async () => {
+      try {
+        const courses = await UserCourseAPI.getUserCourses(userId);
+        setLibraryCourses(courses);
+      } catch (error) {
+        console.error('Failed to load course library:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadCourses();
+  }, [userId]);
+
+  const toggleCourse = (courseId) => {
+    const newSelected = new Set(selectedCourses);
+    if (newSelected.has(courseId)) {
+      newSelected.delete(courseId);
+    } else {
+      newSelected.add(courseId);
+    }
+    setSelectedCourses(newSelected);
+  };
+
+  const handleImport = () => {
+    const coursesToImport = libraryCourses.filter(c => selectedCourses.has(c.id));
+    onImport(coursesToImport);
+  };
+
+  const filteredCourses = libraryCourses.filter(course =>
+    course.course_code.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    course.course_name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  return (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+      <div className="bg-white rounded-3xl p-8 max-w-4xl w-full max-h-[80vh] overflow-hidden shadow-2xl">
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-3xl font-jakarta font-bold text-enrollmate-green">📚 Import from Course Library</h2>
+          <button
+            onClick={onClose}
+            className="text-gray-500 hover:text-gray-700 text-2xl"
+          >
+            ✕
+          </button>
+        </div>
+
+        {/* Search */}
+        <input
+          type="text"
+          placeholder="Search courses..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="w-full px-4 py-3 mb-4 border-2 border-enrollmate-green/30 rounded-xl focus:outline-none focus:border-enrollmate-green font-jakarta"
+        />
+
+        {loading ? (
+          <div className="text-center py-12 text-gray-600 font-jakarta">Loading courses...</div>
+        ) : filteredCourses.length === 0 ? (
+          <div className="text-center py-12 text-gray-600 font-jakarta">No courses in your library</div>
+        ) : (
+          <>
+            <div className="overflow-y-auto max-h-96 mb-6 border-2 border-enrollmate-green/20 rounded-xl">
+              {filteredCourses.map((course) => (
+                <div
+                  key={course.id}
+                  onClick={() => toggleCourse(course.id)}
+                  className={`p-4 cursor-pointer transition-colors hover:bg-enrollmate-green/10 border-b border-gray-200 ${
+                    selectedCourses.has(course.id) ? 'bg-enrollmate-green/20' : ''
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1">
+                      <div className="font-jakarta font-bold text-lg text-gray-800">
+                        {course.course_code} - {course.course_name}
+                      </div>
+                      <div className="text-sm font-jakarta text-gray-600 mt-1">
+                        Section {course.section_group} • {course.schedule}
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-4">
+                      <span className="text-sm font-jakarta text-gray-500">
+                        {course.enrolled_current}/{course.enrolled_total}
+                      </span>
+                      <input
+                        type="checkbox"
+                        checked={selectedCourses.has(course.id)}
+                        onChange={() => {}}
+                        className="w-5 h-5 text-enrollmate-green focus:ring-enrollmate-green rounded"
+                      />
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="flex justify-between items-center">
+              <div className="text-gray-600 font-jakarta">
+                {selectedCourses.size} course{selectedCourses.size !== 1 ? 's' : ''} selected
+              </div>
+              <div className="flex gap-3">
+                <button
+                  onClick={onClose}
+                  className="px-6 py-3 bg-gray-300 text-gray-700 font-jakarta font-bold rounded-xl hover:bg-gray-400 transition-all"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleImport}
+                  disabled={selectedCourses.size === 0}
+                  className="px-6 py-3 bg-enrollmate-green text-white font-jakarta font-bold rounded-xl hover:bg-enrollmate-green/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                >
+                  Import Selected
+                </button>
+              </div>
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
 
 /**
  * CourseInputPanel Component - Left side panel for adding courses and sections
  */
-function CourseInputPanel({ courses, setCourses }) {
+function CourseInputPanel({ courses, setCourses, currentUser }) {
   const [newCourse, setNewCourse] = useState({
     courseCode: '',
     courseName: '',
     sections: [{ group: 1, schedule: '', enrolled: '0/30' }]
   });
   const [csvError, setCsvError] = useState('');
+  const [showLibraryModal, setShowLibraryModal] = useState(false);
 
   const addSection = () => {
     setNewCourse(prev => ({
@@ -84,21 +218,22 @@ function CourseInputPanel({ courses, setCourses }) {
     }
   };
 
-  // CSV Import
-  const handleCsvImport = (event) => {
+  // CSV Import - Now also saves to user's course library
+  const handleCsvImport = async (event) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
     setCsvError('');
     const reader = new FileReader();
 
-    reader.onload = (e) => {
+    reader.onload = async (e) => {
       try {
         const text = e.target?.result;
         const lines = text.split('\n').filter(line => line.trim());
 
         // Expected format: Course Code, Course Name, Group, Schedule, Enrolled
         const parsedCourses = new Map();
+        const coursesToSave = [];
 
         // Skip header row
         for (let i = 1; i < lines.length; i++) {
@@ -112,6 +247,7 @@ function CourseInputPanel({ courses, setCourses }) {
           }
 
           const [courseCode, courseName, group, schedule, enrolled] = parts;
+          const [enrolledCurrent, enrolledTotal] = enrolled.split('/').map(n => parseInt(n.trim()) || 0);
 
           if (!parsedCourses.has(courseCode)) {
             parsedCourses.set(courseCode, {
@@ -126,10 +262,36 @@ function CourseInputPanel({ courses, setCourses }) {
             schedule,
             enrolled
           });
+
+          // Prepare course for saving to library
+          coursesToSave.push({
+            courseCode,
+            courseName,
+            sectionGroup: parseInt(group) || 1,
+            schedule,
+            enrolledCurrent,
+            enrolledTotal,
+            room: null,
+            instructor: null
+          });
         }
 
         setCourses(Array.from(parsedCourses.values()));
         setCsvError('');
+
+        // Save to user's course library if user is logged in
+        if (currentUser && coursesToSave.length > 0) {
+          try {
+            const result = await UserCourseAPI.saveCourses(currentUser.id, coursesToSave, 'csv');
+            console.log(`✅ Saved ${result.success.length} courses to library`);
+            if (result.errors.length > 0) {
+              console.warn(`⚠️ ${result.errors.length} courses failed to save:`, result.errors);
+            }
+          } catch (error) {
+            console.error('Failed to save courses to library:', error);
+            // Don't show error to user - courses are still added to generator
+          }
+        }
       } catch (error) {
         setCsvError(`Failed to parse CSV: ${error.message}`);
       }
@@ -168,6 +330,35 @@ function CourseInputPanel({ courses, setCourses }) {
     URL.revokeObjectURL(url);
   };
 
+  // Import from Course Library
+  const handleImportFromLibrary = async (selectedCourses) => {
+    // Group courses by course code
+    const courseMap = new Map();
+
+    for (const course of selectedCourses) {
+      if (!courseMap.has(course.course_code)) {
+        courseMap.set(course.course_code, {
+          courseCode: course.course_code,
+          courseName: course.course_name,
+          sections: []
+        });
+      }
+
+      courseMap.get(course.course_code).sections.push({
+        group: course.section_group,
+        schedule: course.schedule,
+        enrolled: `${course.enrolled_current}/${course.enrolled_total}`
+      });
+    }
+
+    // Add to existing courses (avoid duplicates)
+    const existingCodes = new Set(courses.map(c => c.courseCode));
+    const newCourses = Array.from(courseMap.values()).filter(c => !existingCodes.has(c.courseCode));
+
+    setCourses([...courses, ...newCourses]);
+    setShowLibraryModal(false);
+  };
+
   return (
     <div className="bg-white/95 backdrop-blur-sm p-6 lg:p-8 rounded-3xl shadow-2xl border border-white/20">
       <div className="flex justify-between items-center mb-6">
@@ -175,6 +366,13 @@ function CourseInputPanel({ courses, setCourses }) {
 
         {/* CSV Import/Export Buttons */}
         <div className="flex gap-3">
+          <button
+            onClick={() => setShowLibraryModal(true)}
+            disabled={!currentUser}
+            className="px-4 py-2 text-sm font-jakarta font-bold bg-purple-600 text-white rounded-xl hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
+          >
+            📚 Import from Library
+          </button>
           <label className="px-4 py-2 text-sm font-jakarta font-bold bg-enrollmate-green text-white rounded-xl hover:bg-enrollmate-green/90 cursor-pointer shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105">
             📥 Import CSV
             <input
@@ -193,6 +391,15 @@ function CourseInputPanel({ courses, setCourses }) {
           </button>
         </div>
       </div>
+
+      {/* Course Library Modal */}
+      {showLibraryModal && currentUser && (
+        <CourseLibraryModal
+          userId={currentUser.id}
+          onImport={handleImportFromLibrary}
+          onClose={() => setShowLibraryModal(false)}
+        />
+      )}
 
       {/* CSV Error Message */}
       {csvError && (
@@ -1254,31 +1461,15 @@ export default function SchedulerPage() {
       const scheduleName = prompt('Enter a name for this schedule:', `Schedule ${new Date().toLocaleDateString()}`);
       if (!scheduleName) return;
 
-      // Create a private schedule (not attached to any semester)
-      const privateSchedule = await ScheduleAPI.createPrivateSchedule(
+      // Save to user_schedules table (legacy format for "Saved Schedules" tab)
+      await saveUserSchedule(
         currentUser.id,
         scheduleName,
-        `Saved on ${new Date().toLocaleDateString()}`
+        schedule.selections,
+        constraints
       );
 
-      // Add all selected courses to the private schedule
-      for (const section of schedule.selections) {
-        try {
-          // Create or get the semester course entry (use first semester if exists, otherwise skip)
-          // For private schedules, we still need to store courses in semester_courses
-          // We'll need to create temporary entries or handle this differently
-          // For now, just add to the junction table if they have semester_course_id
-
-          // NOTE: This requires courses to be stored in semester_courses table
-          // Since private schedules don't attach to semester, we need a different approach
-          // For MVP, we'll save selected sections as course details in the schedule
-        } catch (error) {
-          console.warn(`Could not add course ${section.courseCode}:`, error);
-        }
-      }
-
       setMessage(`✅ Schedule "${scheduleName}" saved privately!`);
-      console.log('Private schedule saved with ID:', privateSchedule.id);
 
       // Refresh saved schedules list if on saved tab
       if (activeTab === 'saved') {
@@ -1521,7 +1712,7 @@ export default function SchedulerPage() {
                   : 'border-transparent text-white/60 hover:text-white/80 hover:border-white/40'
               }`}
             >
-              Saved Schedules
+              Private Schedules
               {savedSchedules.length > 0 && (
                 <span className="ml-2 px-3 py-1 text-sm bg-white text-enrollmate-green rounded-full font-bold">
                   {savedSchedules.length}
@@ -1550,7 +1741,7 @@ export default function SchedulerPage() {
             {/* Main Content Grid */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
               {/* Left Panel - Course Input */}
-              <CourseInputPanel courses={courses} setCourses={setCourses} />
+              <CourseInputPanel courses={courses} setCourses={setCourses} currentUser={currentUser} />
 
               {/* Right Panel - Constraints */}
               <ConstraintsPanel

@@ -1,9 +1,14 @@
-# Enrollmate - Codebase Documentation
+# Enrollmate - Root Documentation
 
 **Purpose**: AI-assisted course scheduling and enrollment management system for students
 **Tech Stack**: Next.js 15.5.3, React 19.1.0, Supabase (PostgreSQL + Auth), Tailwind CSS 4
 **Architecture**: Domain-Driven Design with DAO pattern, separation of concerns
 **Module System**: ES Modules (`.js` extensions required in imports)
+
+## IMPORTANT: Documentation Updates
+**ALWAYS update `CHANGELOG.md` after making any changes, refactors, or additions to the codebase.**
+
+Each subdirectory contains its own `CLAUDE.md` file with specific context for that module. Refer to those files for detailed information about specific components.
 
 ---
 
