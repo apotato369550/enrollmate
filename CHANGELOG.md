@@ -10,9 +10,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Created modular documentation structure with CLAUDE.md files in each directory
 - Added CHANGELOG.md for tracking project changes
+- Added comprehensive import modal to course library with CSV import and manual course addition
+- Added "Import Courses" button to course library page with 50-course limit enforcement
 
 ### Changed
 - Updated root CLAUDE.md to reference subdirectory documentation files
+
+### Fixed
+- Fixed profile picture not loading on dashboard (was hardcoded to feature-1.png instead of using profile.avatar_url)
+- Fixed "Invalid Date" display in Last Updated field on dashboard by properly validating and parsing date strings
+- Fixed PDF export timetable not matching on-screen timetable by implementing consistent schedule parsing
+- Fixed CSV import to course library - added proper CSV parsing and bulk import functionality
+- Updated PDF exporter to use 30-minute time slots matching the timetable grid
+- Improved PDF exporter schedule parsing to handle "Th" (Thursday) and all day variations correctly
 
 ## [0.1.0] - 2025-11-02
 

@@ -18,6 +18,19 @@ export default function CoursesPage() {
   const [showDependencies, setShowDependencies] = useState(null);
   const [dependencies, setDependencies] = useState([]);
   const [message, setMessage] = useState('');
+  const [showImportModal, setShowImportModal] = useState(false);
+  const [importTab, setImportTab] = useState('csv'); // 'csv' or 'manual'
+  const [importing, setImporting] = useState(false);
+  const [manualCourseForm, setManualCourseForm] = useState({
+    courseCode: '',
+    courseName: '',
+    sectionGroup: '',
+    schedule: '',
+    enrolledCurrent: '',
+    enrolledTotal: '',
+    room: '',
+    instructor: ''
+  });
 
   // Load user and courses
   useEffect(() => {
@@ -125,6 +138,122 @@ export default function CoursesPage() {
     }
   };
 
+  // Handle CSV file upload
+  const handleCSVImport = async (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    try {
+      setImporting(true);
+      setMessage('');
+
+      const text = await file.text();
+      const lines = text.split('\n').filter(line => line.trim());
+
+      if (lines.length < 2) {
+        setMessage('❌ CSV file is empty or invalid');
+        return;
+      }
+
+      // Parse CSV
+      const headers = lines[0].split(',').map(h => h.trim());
+      const coursesData = [];
+
+      for (let i = 1; i < lines.length; i++) {
+        const values = lines[i].split(',').map(v => v.trim());
+        const course = {};
+
+        headers.forEach((header, index) => {
+          course[header] = values[index] || '';
+        });
+
+        // Map CSV columns to our format
+        coursesData.push({
+          courseCode: course['Course Code'] || course['course_code'],
+          courseName: course['Course Name'] || course['course_name'],
+          sectionGroup: parseInt(course['Section'] || course['section_group']) || 1,
+          schedule: course['Schedule'] || course['schedule'],
+          enrolledCurrent: parseInt(course['Enrolled'] || course['enrolled_current']) || 0,
+          enrolledTotal: parseInt(course['Capacity'] || course['enrolled_total']) || 0,
+          room: course['Room'] || course['room'] || '',
+          instructor: course['Instructor'] || course['instructor'] || ''
+        });
+      }
+
+      // Save courses
+      const result = await UserCourseAPI.saveCourses(currentUser.id, coursesData, 'csv');
+
+      // Reload courses and stats
+      const loadedCourses = await UserCourseAPI.getUserCourses(currentUser.id);
+      setCourses(loadedCourses);
+      const updatedStats = await UserCourseAPI.getCourseStats(currentUser.id);
+      setStats(updatedStats);
+
+      setMessage(`✅ ${result.message}`);
+      setShowImportModal(false);
+
+      // Reset file input
+      event.target.value = '';
+    } catch (error) {
+      console.error('Error importing CSV:', error);
+      setMessage(`❌ Failed to import CSV: ${error.message}`);
+    } finally {
+      setImporting(false);
+    }
+  };
+
+  // Handle manual course addition
+  const handleManualAdd = async () => {
+    try {
+      setImporting(true);
+      setMessage('');
+
+      // Validate form
+      if (!manualCourseForm.courseCode || !manualCourseForm.courseName) {
+        setMessage('❌ Course code and name are required');
+        return;
+      }
+
+      // Save course
+      await UserCourseAPI.saveCourse(currentUser.id, {
+        courseCode: manualCourseForm.courseCode,
+        courseName: manualCourseForm.courseName,
+        sectionGroup: parseInt(manualCourseForm.sectionGroup) || 1,
+        schedule: manualCourseForm.schedule || '',
+        enrolledCurrent: parseInt(manualCourseForm.enrolledCurrent) || 0,
+        enrolledTotal: parseInt(manualCourseForm.enrolledTotal) || 0,
+        room: manualCourseForm.room || '',
+        instructor: manualCourseForm.instructor || ''
+      }, 'manual');
+
+      // Reload courses and stats
+      const loadedCourses = await UserCourseAPI.getUserCourses(currentUser.id);
+      setCourses(loadedCourses);
+      const updatedStats = await UserCourseAPI.getCourseStats(currentUser.id);
+      setStats(updatedStats);
+
+      setMessage('✅ Course added successfully');
+      setShowImportModal(false);
+
+      // Reset form
+      setManualCourseForm({
+        courseCode: '',
+        courseName: '',
+        sectionGroup: '',
+        schedule: '',
+        enrolledCurrent: '',
+        enrolledTotal: '',
+        room: '',
+        instructor: ''
+      });
+    } catch (error) {
+      console.error('Error adding course:', error);
+      setMessage(`❌ Failed to add course: ${error.message}`);
+    } finally {
+      setImporting(false);
+    }
+  };
+
   if (!currentUser) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-enrollmate-green/10 to-enrollmate-light-green/10 flex items-center justify-center p-4">
@@ -158,11 +287,20 @@ export default function CoursesPage() {
               Manage your saved courses • {stats.total}/50 courses
             </p>
           </div>
-          <Link href="/dashboard">
-            <button className="px-6 py-3 bg-white/20 backdrop-blur-sm text-white font-jakarta font-bold rounded-xl hover:bg-white/30 shadow-lg transition-all duration-300 border border-white/30">
-              ← Dashboard
+          <div className="flex gap-3">
+            <button
+              onClick={() => setShowImportModal(true)}
+              disabled={stats.remaining === 0}
+              className="px-6 py-3 bg-enrollmate-green text-white font-jakarta font-bold rounded-xl hover:bg-enrollmate-green/90 shadow-lg transition-all duration-300 disabled:bg-gray-400 disabled:cursor-not-allowed"
+            >
+              ➕ Import Courses
             </button>
-          </Link>
+            <Link href="/dashboard">
+              <button className="px-6 py-3 bg-white/20 backdrop-blur-sm text-white font-jakarta font-bold rounded-xl hover:bg-white/30 shadow-lg transition-all duration-300 border border-white/30">
+                ← Dashboard
+              </button>
+            </Link>
+          </div>
         </div>
 
         {/* Message */}
@@ -361,6 +499,203 @@ export default function CoursesPage() {
               >
                 Close
               </button>
+            </div>
+          </div>
+        )}
+
+        {/* Import Modal */}
+        {showImportModal && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+            <div className="bg-white rounded-2xl p-8 max-w-2xl w-full shadow-2xl max-h-[90vh] overflow-y-auto">
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-3xl font-jakarta font-bold text-gray-800">
+                  ➕ Import Courses
+                </h3>
+                <button
+                  onClick={() => setShowImportModal(false)}
+                  className="text-gray-500 hover:text-gray-700 text-2xl"
+                >
+                  ✕
+                </button>
+              </div>
+
+              {/* Tabs */}
+              <div className="flex gap-2 mb-6 border-b border-gray-200">
+                <button
+                  onClick={() => setImportTab('csv')}
+                  className={`px-6 py-3 font-jakarta font-bold transition-all ${
+                    importTab === 'csv'
+                      ? 'text-enrollmate-green border-b-2 border-enrollmate-green'
+                      : 'text-gray-500 hover:text-gray-700'
+                  }`}
+                >
+                  📥 Import CSV
+                </button>
+                <button
+                  onClick={() => setImportTab('manual')}
+                  className={`px-6 py-3 font-jakarta font-bold transition-all ${
+                    importTab === 'manual'
+                      ? 'text-enrollmate-green border-b-2 border-enrollmate-green'
+                      : 'text-gray-500 hover:text-gray-700'
+                  }`}
+                >
+                  ✏️ Add Manually
+                </button>
+              </div>
+
+              {/* CSV Import Tab */}
+              {importTab === 'csv' && (
+                <div>
+                  <p className="text-gray-600 font-jakarta mb-4">
+                    Upload a CSV file with your course data. The file should have the following columns:
+                  </p>
+                  <div className="bg-gray-50 p-4 rounded-lg mb-6 font-mono text-sm">
+                    Course Code, Course Name, Section, Schedule, Enrolled, Capacity, Room, Instructor
+                  </div>
+                  <div className="mb-6">
+                    <label className="block text-sm font-jakarta font-bold text-gray-700 mb-2">
+                      Choose CSV File
+                    </label>
+                    <input
+                      type="file"
+                      accept=".csv"
+                      onChange={handleCSVImport}
+                      disabled={importing}
+                      className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:border-enrollmate-green font-jakarta"
+                    />
+                  </div>
+                  {importing && (
+                    <div className="text-center py-4">
+                      <div className="text-enrollmate-green font-jakarta font-bold">
+                        Importing courses...
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Manual Add Tab */}
+              {importTab === 'manual' && (
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-jakarta font-bold text-gray-700 mb-2">
+                        Course Code *
+                      </label>
+                      <input
+                        type="text"
+                        value={manualCourseForm.courseCode}
+                        onChange={(e) => setManualCourseForm({...manualCourseForm, courseCode: e.target.value})}
+                        placeholder="e.g., CIS 3100"
+                        className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:border-enrollmate-green font-jakarta"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-jakarta font-bold text-gray-700 mb-2">
+                        Section Group *
+                      </label>
+                      <input
+                        type="number"
+                        value={manualCourseForm.sectionGroup}
+                        onChange={(e) => setManualCourseForm({...manualCourseForm, sectionGroup: e.target.value})}
+                        placeholder="e.g., 1"
+                        className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:border-enrollmate-green font-jakarta"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-jakarta font-bold text-gray-700 mb-2">
+                      Course Name *
+                    </label>
+                    <input
+                      type="text"
+                      value={manualCourseForm.courseName}
+                      onChange={(e) => setManualCourseForm({...manualCourseForm, courseName: e.target.value})}
+                      placeholder="e.g., Data Structures"
+                      className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:border-enrollmate-green font-jakarta"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-jakarta font-bold text-gray-700 mb-2">
+                      Schedule
+                    </label>
+                    <input
+                      type="text"
+                      value={manualCourseForm.schedule}
+                      onChange={(e) => setManualCourseForm({...manualCourseForm, schedule: e.target.value})}
+                      placeholder="e.g., MW 10:00 AM - 11:30 AM"
+                      className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:border-enrollmate-green font-jakarta"
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-jakarta font-bold text-gray-700 mb-2">
+                        Enrolled
+                      </label>
+                      <input
+                        type="number"
+                        value={manualCourseForm.enrolledCurrent}
+                        onChange={(e) => setManualCourseForm({...manualCourseForm, enrolledCurrent: e.target.value})}
+                        placeholder="e.g., 30"
+                        className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:border-enrollmate-green font-jakarta"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-jakarta font-bold text-gray-700 mb-2">
+                        Capacity
+                      </label>
+                      <input
+                        type="number"
+                        value={manualCourseForm.enrolledTotal}
+                        onChange={(e) => setManualCourseForm({...manualCourseForm, enrolledTotal: e.target.value})}
+                        placeholder="e.g., 40"
+                        className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:border-enrollmate-green font-jakarta"
+                      />
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-jakarta font-bold text-gray-700 mb-2">
+                        Room
+                      </label>
+                      <input
+                        type="text"
+                        value={manualCourseForm.room}
+                        onChange={(e) => setManualCourseForm({...manualCourseForm, room: e.target.value})}
+                        placeholder="e.g., CIS311TC"
+                        className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:border-enrollmate-green font-jakarta"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-jakarta font-bold text-gray-700 mb-2">
+                        Instructor
+                      </label>
+                      <input
+                        type="text"
+                        value={manualCourseForm.instructor}
+                        onChange={(e) => setManualCourseForm({...manualCourseForm, instructor: e.target.value})}
+                        placeholder="e.g., Dr. Smith"
+                        className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:border-enrollmate-green font-jakarta"
+                      />
+                    </div>
+                  </div>
+                  <div className="flex gap-3 pt-4">
+                    <button
+                      onClick={handleManualAdd}
+                      disabled={importing}
+                      className="flex-1 px-6 py-3 bg-enrollmate-green text-white font-jakarta font-bold rounded-xl hover:bg-enrollmate-green/90 disabled:bg-gray-400 disabled:cursor-not-allowed shadow-lg"
+                    >
+                      {importing ? 'Adding...' : 'Add Course'}
+                    </button>
+                    <button
+                      onClick={() => setShowImportModal(false)}
+                      className="px-6 py-3 bg-gray-200 text-gray-700 font-jakarta font-bold rounded-xl hover:bg-gray-300"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         )}

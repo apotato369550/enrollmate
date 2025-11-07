@@ -80,9 +80,23 @@ export default function Dashboard() {
       // Calculate stats
       const totalSchedules = data.length;
       const activeSchedules = data.filter(s => s.status === 'active' || s.status === 'draft').length;
-      const lastUpdated = data.length > 0
-        ? new Date(Math.max(...data.map(s => new Date(s.updated_at || s.created_at))))
-        : null;
+
+      // Find the most recent update date
+      let lastUpdated = null;
+      if (data.length > 0) {
+        const dates = data
+          .map(s => {
+            const dateStr = s.updated_at || s.created_at;
+            if (!dateStr) return null;
+            const date = new Date(dateStr);
+            return isNaN(date.getTime()) ? null : date;
+          })
+          .filter(d => d !== null);
+
+        if (dates.length > 0) {
+          lastUpdated = new Date(Math.max(...dates.map(d => d.getTime())));
+        }
+      }
 
       setStats({
         totalSchedules,
@@ -209,7 +223,7 @@ export default function Dashboard() {
                 className="w-12 h-12 sm:w-14 sm:h-14 rounded-full overflow-hidden border-2 border-white shadow-lg hover:scale-105 transition-transform duration-200"
               >
                 <img
-                  src="/assets/images/feature-1.png"
+                  src={profile?.avatar_url || '/assets/images/default-avatar.png'}
                   alt="Profile"
                   className="w-full h-full object-cover"
                 />
