@@ -21,6 +21,7 @@ export default function CoursesPage() {
   const [showImportModal, setShowImportModal] = useState(false);
   const [importTab, setImportTab] = useState('csv'); // 'csv' or 'manual'
   const [importing, setImporting] = useState(false);
+  const [selectedCourses, setSelectedCourses] = useState([]);
   const [manualCourseForm, setManualCourseForm] = useState({
     courseCode: '',
     courseName: '',
@@ -113,15 +114,40 @@ export default function CoursesPage() {
     }
   };
 
-  // Handle clear all courses from a source
-  const handleClearSource = async (source) => {
-    const sourceName = source === 'csv' ? 'CSV' : source === 'extension' ? 'Chrome Extension' : 'Manual';
-    if (!confirm(`Delete all courses imported from ${sourceName}?`)) {
+  // Toggle course selection
+  const toggleCourseSelection = (courseId) => {
+    setSelectedCourses(prev =>
+      prev.includes(courseId)
+        ? prev.filter(id => id !== courseId)
+        : [...prev, courseId]
+    );
+  };
+
+  // Toggle select all
+  const toggleSelectAll = () => {
+    if (selectedCourses.length === filteredCourses.length) {
+      setSelectedCourses([]);
+    } else {
+      setSelectedCourses(filteredCourses.map(c => c.id));
+    }
+  };
+
+  // Handle clear selected courses
+  const handleClearSelected = async () => {
+    if (selectedCourses.length === 0) {
+      setMessage('❌ No courses selected');
+      return;
+    }
+
+    if (!confirm(`Delete ${selectedCourses.length} selected course${selectedCourses.length !== 1 ? 's' : ''}?`)) {
       return;
     }
 
     try {
-      const count = await UserCourseAPI.clearCoursesBySource(currentUser.id, source);
+      // Delete each selected course
+      for (const courseId of selectedCourses) {
+        await UserCourseAPI.deleteCourse(courseId);
+      }
 
       // Reload courses
       const loadedCourses = await UserCourseAPI.getUserCourses(currentUser.id);
@@ -131,10 +157,44 @@ export default function CoursesPage() {
       const updatedStats = await UserCourseAPI.getCourseStats(currentUser.id);
       setStats(updatedStats);
 
-      setMessage(`✅ Deleted ${count} courses`);
+      setMessage(`✅ Deleted ${selectedCourses.length} courses`);
+      setSelectedCourses([]);
     } catch (error) {
-      console.error('Error clearing courses:', error);
+      console.error('Error clearing selected courses:', error);
       setMessage(`❌ Failed to clear courses: ${error.message}`);
+    }
+  };
+
+  // Handle clear all courses
+  const handleClearAll = async () => {
+    if (courses.length === 0) {
+      setMessage('❌ No courses to delete');
+      return;
+    }
+
+    if (!confirm(`Delete ALL ${courses.length} courses? This cannot be undone.`)) {
+      return;
+    }
+
+    try {
+      // Delete all courses
+      for (const course of courses) {
+        await UserCourseAPI.deleteCourse(course.id);
+      }
+
+      // Reload courses
+      const loadedCourses = await UserCourseAPI.getUserCourses(currentUser.id);
+      setCourses(loadedCourses);
+
+      // Update stats
+      const updatedStats = await UserCourseAPI.getCourseStats(currentUser.id);
+      setStats(updatedStats);
+
+      setMessage(`✅ Deleted all courses`);
+      setSelectedCourses([]);
+    } catch (error) {
+      console.error('Error clearing all courses:', error);
+      setMessage(`❌ Failed to clear all courses: ${error.message}`);
     }
   };
 
@@ -339,7 +399,7 @@ export default function CoursesPage() {
 
         {/* Search and Filters */}
         <div className="bg-white/95 backdrop-blur-sm rounded-2xl p-6 shadow-xl mb-6 border-2 border-white/50">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
             <div className="lg:col-span-2">
               <label className="block text-sm font-jakarta font-bold text-enrollmate-green mb-2 uppercase tracking-wide">
                 🔍 Search Courses
@@ -352,39 +412,36 @@ export default function CoursesPage() {
                 className="w-full px-5 py-3 border-2 border-enrollmate-green/30 rounded-xl focus:outline-none focus:border-enrollmate-green focus:ring-2 focus:ring-enrollmate-green/20 font-jakarta transition-all"
               />
             </div>
-            <div className="lg:col-span-1 grid grid-cols-2 gap-3">
-              <div>
-                <label className="block text-sm font-jakarta font-bold text-enrollmate-green mb-2 uppercase tracking-wide">
-                  Filter
-                </label>
-                <select
-                  value={sourceFilter}
-                  onChange={(e) => setSourceFilter(e.target.value)}
-                  className="w-full px-4 py-3 border-2 border-enrollmate-green/30 rounded-xl focus:outline-none focus:border-enrollmate-green font-jakarta transition-all"
-                >
-                  <option value="all">All</option>
-                  <option value="manual">Manual</option>
-                  <option value="csv">CSV</option>
-                  <option value="extension">Extension</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-jakarta font-bold text-red-600 mb-2 uppercase tracking-wide">
-                  Clear
-                </label>
-                <button
-                  onClick={() => {
-                    if (stats && stats.total > 0) {
-                      handleClearSource('manual');
-                    }
-                  }}
-                  disabled={!stats || stats.manual === 0}
-                  className="w-full px-4 py-3 bg-red-500 text-white font-jakarta font-bold rounded-xl hover:bg-red-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-all duration-300 shadow-md"
-                  title="Clear all manually added courses"
-                >
-                  🗑️ {stats ? stats.manual : 0}
-                </button>
-              </div>
+            <div>
+              <label className="block text-sm font-jakarta font-bold text-enrollmate-green mb-2 uppercase tracking-wide">
+                Filter
+              </label>
+              <select
+                value={sourceFilter}
+                onChange={(e) => setSourceFilter(e.target.value)}
+                className="w-full px-4 py-3 border-2 border-enrollmate-green/30 rounded-xl focus:outline-none focus:border-enrollmate-green font-jakarta transition-all"
+              >
+                <option value="all">All</option>
+                <option value="manual">Manual</option>
+                <option value="csv">CSV</option>
+                <option value="extension">Extension</option>
+              </select>
+            </div>
+            <div className="flex flex-col gap-2">
+              <button
+                onClick={handleClearSelected}
+                disabled={selectedCourses.length === 0}
+                className="px-4 py-2 bg-orange-500 text-white font-jakarta font-bold rounded-xl hover:bg-orange-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-all duration-300 shadow-md text-sm"
+              >
+                🗑️ Clear Selected ({selectedCourses.length})
+              </button>
+              <button
+                onClick={handleClearAll}
+                disabled={courses.length === 0}
+                className="px-4 py-2 bg-red-600 text-white font-jakarta font-bold rounded-xl hover:bg-red-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-all duration-300 shadow-md text-sm"
+              >
+                🗑️ Clear All Courses
+              </button>
             </div>
           </div>
         </div>
@@ -408,6 +465,14 @@ export default function CoursesPage() {
               <table className="w-full">
                 <thead>
                   <tr className="bg-gradient-to-r from-enrollmate-green to-enrollmate-light-green text-white">
+                    <th className="px-4 py-4 text-center font-jakarta font-bold uppercase tracking-wide text-sm w-12">
+                      <input
+                        type="checkbox"
+                        checked={selectedCourses.length === filteredCourses.length && filteredCourses.length > 0}
+                        onChange={toggleSelectAll}
+                        className="w-5 h-5 cursor-pointer"
+                      />
+                    </th>
                     <th className="px-6 py-4 text-left font-jakarta font-bold uppercase tracking-wide text-sm">Course</th>
                     <th className="px-6 py-4 text-left font-jakarta font-bold uppercase tracking-wide text-sm">Name</th>
                     <th className="px-6 py-4 text-center font-jakarta font-bold uppercase tracking-wide text-sm">Section</th>
@@ -420,6 +485,14 @@ export default function CoursesPage() {
                 <tbody className="divide-y divide-enrollmate-green/10">
                   {filteredCourses.map((course, idx) => (
                     <tr key={course.id} className="hover:bg-enrollmate-green/5 transition-colors">
+                      <td className="px-4 py-4 text-center">
+                        <input
+                          type="checkbox"
+                          checked={selectedCourses.includes(course.id)}
+                          onChange={() => toggleCourseSelection(course.id)}
+                          className="w-5 h-5 cursor-pointer"
+                        />
+                      </td>
                       <td className="px-6 py-4 font-jakarta font-bold text-enrollmate-green text-lg">
                         {course.course_code}
                       </td>

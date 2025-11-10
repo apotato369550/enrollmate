@@ -12,16 +12,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added CHANGELOG.md for tracking project changes
 - Added comprehensive import modal to course library with CSV import and manual course addition
 - Added "Import Courses" button to course library page with 50-course limit enforcement
+- Added checkbox selection for courses in course library
+- Added "Clear Selected" and "Clear All Courses" buttons with confirmation dialogs
+- Added select all checkbox in table header
+- Added API_DOCUMENTATION.md with complete Chrome extension integration guide
+- Updated README.md with API usage examples and quick start guide
 
 ### Changed
 - Updated root CLAUDE.md to reference subdirectory documentation files
+- Completely rewrote PDF exporter to match university schedule format
+- Improved course library UI with better bulk operations
+- Replaced non-functional "Clear" button with functional "Clear Selected" and "Clear All" buttons
+- Updated PDF styling with university-style logo, metadata headers, and clean table format
+- Changed PDF colors to match sample (orange, pink, purple, teal, green, peach)
 
 ### Fixed
 - Fixed profile picture not loading on dashboard (was hardcoded to feature-1.png instead of using profile.avatar_url)
 - Fixed "Invalid Date" display in Last Updated field on dashboard by properly validating and parsing date strings
-- Fixed PDF export timetable not matching on-screen timetable by implementing consistent schedule parsing
-- Fixed CSV import to course library - added proper CSV parsing and bulk import functionality
-- Updated PDF exporter to use 30-minute time slots matching the timetable grid
+- Fixed PDF export styling to match sample output (university format with logo, metadata, clean table)
+- Fixed CSV import error - added better validation and error logging for missing/invalid fields
+- Fixed Clear button in course library that was never pressable
 - Improved PDF exporter schedule parsing to handle "Th" (Thursday) and all day variations correctly
 
 ## [0.1.0] - 2025-11-02

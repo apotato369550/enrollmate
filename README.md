@@ -1,36 +1,349 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# Enrollmate - AI-Assisted Course Scheduling System
 
-## Getting Started
+**Version**: 0.1.0
+**Tech Stack**: Next.js 15.5.3, React 19.1.0, Supabase, Tailwind CSS 4
+**Architecture**: Domain-Driven Design with DAO pattern
 
-First, run the development server:
+AI-assisted course scheduling and enrollment management system for students.
+
+---
+
+## Features
+
+- 🗓️ **Multi-Semester Management** - Organize schedules across multiple semesters
+- 📚 **Course Library** - Save up to 50 courses with source tracking (manual, CSV, extension)
+- ⏰ **Conflict Detection** - Automatic time overlap detection
+- 📄 **PDF Export** - Export schedules as professional PDFs
+- 🔒 **Private Schedules** - Create schedules not tied to any semester
+- 📥 **CSV Import** - Bulk import courses from CSV files
+- 🔌 **Chrome Extension Ready** - API endpoints for browser extension integration
+
+---
+
+## Quick Start
+
+### Prerequisites
+
+- Node.js 18+ and npm
+- Supabase account
+
+### Installation
+
+```bash
+# Clone the repository
+git clone https://github.com/yourusername/enrollmate.git
+cd enrollmate
+
+# Install dependencies
+npm install
+
+# Set up environment variables
+cp .env.example .env.local
+# Edit .env.local with your Supabase credentials
+```
+
+### Environment Variables
+
+Create `.env.local` in the root directory:
+
+```bash
+NEXT_PUBLIC_SUPABASE_API=https://your-project.supabase.co
+NEXT_PUBLIC_PUBLIC_API_KEY=your-anon-key
+```
+
+### Database Setup
+
+Apply migrations in order:
+
+```bash
+node migrations/apply-migration.js migrations/001_create_scheduler_tables.sql
+node migrations/apply-migration.js migrations/002_create_semester_architecture.sql
+node migrations/apply-migration.js migrations/003_fix_cascade_delete.sql
+node migrations/apply-migration.js migrations/004_private_schedules_and_saved_courses.sql
+```
+
+### Run Development Server
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000)
 
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
+---
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## API Integration
 
-## Learn More
+Enrollmate provides API endpoints for Chrome extension integration.
 
-To learn more about Next.js, take a look at the following resources:
+### Quick Example
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```javascript
+import UserCourseAPI from '../lib/api/userCourseAPI.js';
+import { supabase } from '../lib/supabase.js';
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+// Get authenticated user
+const { data: { user } } = await supabase.auth.getUser();
 
-## Deploy on Vercel
+// Save course to library
+const course = await UserCourseAPI.saveCourse(user.id, {
+  courseCode: "CIS 3100",
+  courseName: "Data Structures",
+  sectionGroup: 1,
+  schedule: "MW 10:00 AM - 11:30 AM",
+  enrolledCurrent: 30,
+  enrolledTotal: 40,
+  room: "CIS311TC",
+  instructor: "Dr. Smith"
+}, 'extension');
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### Available APIs
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+| API | Purpose | Documentation |
+|-----|---------|---------------|
+| **UserCourseAPI** | Manage user's 50-course library | See below |
+| **ScheduleAPI** | Create and manage schedules | See below |
+| **SemesterAPI** | Semester management | See below |
+| **SemesterCourseAPI** | Course catalog per semester | See below |
+
+### User Course Library API
+
+```javascript
+import UserCourseAPI from '../lib/api/userCourseAPI.js';
+
+// Save single course
+await UserCourseAPI.saveCourse(userId, courseData, 'extension');
+
+// Bulk save courses
+await UserCourseAPI.saveCourses(userId, coursesArray, 'extension');
+
+// Get user's courses
+const courses = await UserCourseAPI.getUserCourses(userId);
+
+// Get courses by source ('manual', 'csv', 'extension')
+const extensionCourses = await UserCourseAPI.getCoursesBySource(userId, 'extension');
+
+// Get stats (check 50-course limit)
+const stats = await UserCourseAPI.getCourseStats(userId);
+// Returns: { total: 15, manual: 5, csv: 7, extension: 3, remaining: 35 }
+
+// Delete course
+await UserCourseAPI.deleteCourse(courseId);
+
+// Search courses
+const results = await UserCourseAPI.searchCourses(userId, "CIS");
+```
+
+### Schedule API
+
+```javascript
+import { ScheduleAPI } from '../lib/api/scheduleAPI.js';
+
+// Create schedule
+const schedule = await ScheduleAPI.createSchedule(semesterId, userId, "Schedule A", "Description");
+
+// Create private schedule (not tied to semester)
+const privateSchedule = await ScheduleAPI.createPrivateSchedule(userId, "Dream Schedule", "");
+
+// Get schedule
+const schedule = await ScheduleAPI.getScheduleById(scheduleId);
+
+// Add/remove courses
+await ScheduleAPI.addCourseToSchedule(scheduleId, courseId);
+await ScheduleAPI.removeCourseFromSchedule(scheduleId, courseId);
+```
+
+### Semester API
+
+```javascript
+import { SemesterAPI } from '../lib/api/semesterAPI.js';
+
+// Get current semester
+const semester = await SemesterAPI.getCurrentSemester(userId);
+
+// Create semester
+const semester = await SemesterAPI.createSemester(userId, '1st', 2025);
+// semesterType: '1st', '2nd', or 'Summer'
+
+// Get all semesters
+const semesters = await SemesterAPI.getUserSemesters(userId);
+```
+
+### Complete API Documentation
+
+For detailed API documentation including:
+- All endpoints and parameters
+- Error handling
+- Chrome extension integration examples
+- Best practices
+
+See **[API_DOCUMENTATION.md](./API_DOCUMENTATION.md)**
+
+---
+
+## Project Structure
+
+```
+enrollmate/
+├── lib/                      # Backend logic
+│   ├── api/                  # Data Access Objects (DAOs)
+│   ├── domain/               # Domain models
+│   ├── scheduler/            # Conflict detection engine
+│   └── utils/                # Utilities (PDF export, etc.)
+├── src/
+│   ├── app/                  # Next.js pages
+│   └── components/           # React components
+├── migrations/               # Database migrations
+├── sample-schedules/         # Test data (CSV files)
+└── API_DOCUMENTATION.md      # Complete API reference
+```
+
+---
+
+## Key Concepts
+
+### Course Library
+
+Users can save up to **50 courses** with source tracking:
+- **Manual**: Manually added by user
+- **CSV**: Imported from CSV file
+- **Extension**: Added via Chrome extension
+
+Check available space before bulk import:
+```javascript
+const stats = await UserCourseAPI.getCourseStats(userId);
+console.log(`Can save ${stats.remaining} more courses`);
+```
+
+### Schedules
+
+Two types of schedules:
+1. **Semester Schedules**: Attached to a specific semester
+2. **Private Schedules**: Not attached to any semester (for planning)
+
+### Conflict Detection
+
+Automatic time conflict detection when adding courses to schedules:
+- Parses schedule strings (e.g., "MW 10:00 AM - 11:30 AM")
+- Checks for day overlap (M, T, W, Th, F, S, Su)
+- Checks for time overlap using 30-minute intervals
+
+---
+
+## Development
+
+### Tech Stack
+
+- **Frontend**: Next.js 15.5.3 (App Router), React 19.1.0
+- **Styling**: Tailwind CSS 4
+- **Database**: Supabase (PostgreSQL)
+- **Authentication**: Supabase Auth
+- **PDF Export**: jsPDF + html2canvas
+
+### Module System
+
+**IMPORTANT**: Always use `.js` extensions in imports (ES Modules):
+
+```javascript
+// ✅ CORRECT
+import { ScheduleAPI } from '../../../lib/api/scheduleAPI.js';
+
+// ❌ WRONG
+import { ScheduleAPI } from '../../../lib/api/scheduleAPI';
+```
+
+### Code Documentation
+
+Each directory has its own `CLAUDE.md` file with detailed context:
+- `/CLAUDE.md` - Root documentation
+- `/lib/CLAUDE.md` - Backend architecture
+- `/src/app/CLAUDE.md` - Frontend routing
+- And more...
+
+See `CHANGELOG.md` for recent changes.
+
+---
+
+## Testing
+
+### Manual Testing
+
+1. **Authentication**: Sign up and log in
+2. **Course Library**: Import CSV, add manually, check 50-course limit
+3. **Schedules**: Create schedule, add courses, check conflict detection
+4. **PDF Export**: Export schedule and verify styling
+5. **Chrome Extension**: Test API integration
+
+### Test Data
+
+Sample CSV files available in `sample-schedules/`:
+- Computer Science
+- Accounting
+- Biology
+- Engineering
+- Finance
+- Law
+- Physics
+- Psychology
+
+---
+
+## Deployment
+
+### Build
+
+```bash
+npm run build
+npm start
+```
+
+### Vercel Deployment
+
+1. Push to GitHub
+2. Import project in Vercel
+3. Add environment variables
+4. Deploy
+
+---
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Update `CHANGELOG.md`
+5. Submit a pull request
+
+---
+
+## Security
+
+- Row-Level Security (RLS) enabled on all tables
+- User data isolated per user
+- Cascade deletion on user account removal
+- Public Supabase anon key is safe (RLS protects data)
+
+---
+
+## Support
+
+- **Issues**: [GitHub Issues](https://github.com/yourusername/enrollmate/issues)
+- **Documentation**: See `/CLAUDE.md` files throughout the codebase
+- **API Reference**: See `API_DOCUMENTATION.md`
+
+---
+
+## License
+
+MIT License - See LICENSE file for details
+
+---
+
+## Changelog
+
+See [CHANGELOG.md](./CHANGELOG.md) for version history and recent changes.
+
+---
+
+**Built with ❤️ for students**
