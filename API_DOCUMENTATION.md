@@ -8,11 +8,12 @@
 
 ## Table of Contents
 1. [Authentication](#authentication)
-2. [User Course Library](#user-course-library)
-3. [Schedules](#schedules)
-4. [Semesters](#semesters)
-5. [Course Catalog](#course-catalog)
-6. [Error Handling](#error-handling)
+2. [HTTP API Endpoints (Chrome Extension)](#http-api-endpoints-chrome-extension)
+3. [User Course Library (JavaScript API)](#user-course-library-javascript-api)
+4. [Schedules](#schedules)
+5. [Semesters](#semesters)
+6. [Course Catalog](#course-catalog)
+7. [Error Handling](#error-handling)
 
 ---
 
@@ -42,9 +43,202 @@ const { data: { user }, error } = await supabase.auth.getUser();
 
 ---
 
-## User Course Library
+## HTTP API Endpoints (Chrome Extension)
+
+These endpoints are designed for the Chrome extension to interact with Enrollmate via HTTP requests. All endpoints require authentication via Bearer token.
+
+### Authentication Flow
+
+1. **Login**: `POST /api/auth/login`
+
+**Request**:
+```json
+{
+  "email": "user@example.com",
+  "password": "password123"
+}
+```
+
+**Response**:
+```json
+{
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "userId": "uuid",
+  "email": "user@example.com"
+}
+```
+
+**Usage in Extension**:
+```javascript
+const response = await fetch(`${ENROLLMATE_API_URL}/api/auth/login`, {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ email, password })
+});
+
+const { token, userId } = await response.json();
+```
+
+---
+
+### Import Courses to User Library
+
+**Endpoint**: `POST /api/users/{userId}/courses`
+
+**Purpose**: Import courses from browser extension directly to user's course library (max 50 courses)
+
+**Headers**:
+```
+Authorization: Bearer {token}
+Content-Type: application/json
+```
+
+**Request Body**:
+```json
+{
+  "courses": [
+    {
+      "courseCode": "CIS 3100",
+      "courseName": "Data Structures",
+      "sectionGroup": 1,
+      "schedule": "MW 10:00 AM - 11:30 AM",
+      "enrolledCurrent": 30,
+      "enrolledTotal": 40,
+      "room": "CIS311TC",
+      "instructor": "Dr. Smith"
+    },
+    {
+      "courseCode": "MATH 2010",
+      "courseName": "Calculus I",
+      "sectionGroup": 2,
+      "schedule": "TThF 09:00 AM - 10:30 AM",
+      "enrolledCurrent": 40,
+      "enrolledTotal": 40,
+      "room": "MATH201",
+      "instructor": "Prof. Johnson"
+    }
+  ]
+}
+```
+
+**Response (Success)**:
+```json
+{
+  "message": "Successfully saved all 2 courses",
+  "coursesImported": 2,
+  "coursesSkipped": 0,
+  "stats": {
+    "total": 17,
+    "manual": 5,
+    "csv": 10,
+    "extension": 2,
+    "remaining": 33
+  }
+}
+```
+
+**Response (Partial Success with Limit Warning)**:
+```json
+{
+  "message": "Saved 10/15 courses. 5 failed.",
+  "coursesImported": 10,
+  "coursesSkipped": 5,
+  "limitWarning": "Only importing first 10 courses due to 50-course limit. 5 courses were skipped.",
+  "stats": {
+    "total": 50,
+    "manual": 20,
+    "csv": 20,
+    "extension": 10,
+    "remaining": 0
+  },
+  "errors": [
+    {
+      "course": "CIS 4200 - Section 1",
+      "error": "Course already exists"
+    }
+  ]
+}
+```
+
+**Response (Library Full)**:
+```json
+{
+  "message": "Course library is full (50-course limit). Please delete some courses before importing.",
+  "stats": {
+    "total": 50,
+    "remaining": 0,
+    "coursesAttempted": 15
+  }
+}
+```
+
+**Usage in Extension**:
+```javascript
+const response = await fetch(
+  `${ENROLLMATE_API_URL}/api/users/${userId}/courses`,
+  {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
+    },
+    body: JSON.stringify({ courses })
+  }
+);
+
+const result = await response.json();
+if (result.limitWarning) {
+  console.warn(result.limitWarning);
+}
+```
+
+---
+
+### Get User's Course Library
+
+**Endpoint**: `GET /api/users/{userId}/courses`
+
+**Headers**:
+```
+Authorization: Bearer {token}
+```
+
+**Response**:
+```json
+{
+  "courses": [
+    {
+      "id": "uuid",
+      "user_id": "uuid",
+      "course_code": "CIS 3100",
+      "course_name": "Data Structures",
+      "section_group": 1,
+      "schedule": "MW 10:00 AM - 11:30 AM",
+      "enrolled_current": 30,
+      "enrolled_total": 40,
+      "room": "CIS311TC",
+      "instructor": "Dr. Smith",
+      "source": "extension",
+      "created_at": "2025-11-20T12:00:00Z"
+    }
+  ],
+  "stats": {
+    "total": 17,
+    "manual": 5,
+    "csv": 10,
+    "extension": 2,
+    "remaining": 33
+  }
+}
+```
+
+---
+
+## User Course Library (JavaScript API)
 
 The user course library stores up to 50 courses per user with source tracking.
+
+**Note**: These are JavaScript methods for use within the Enrollmate application. For Chrome extension integration, use the HTTP endpoints above.
 
 ### 1. Save Course to Library
 

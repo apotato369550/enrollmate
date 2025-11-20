@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added select all checkbox in table header
 - Added API_DOCUMENTATION.md with complete Chrome extension integration guide
 - Updated README.md with API usage examples and quick start guide
+- Added new API endpoint `/api/users/[userId]/courses` for importing courses directly to user library (GET/POST)
 
 ### Changed
 - Updated root CLAUDE.md to reference subdirectory documentation files
@@ -25,6 +26,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Replaced non-functional "Clear" button with functional "Clear Selected" and "Clear All" buttons
 - Updated PDF styling with university-style logo, metadata headers, and clean table format
 - Changed PDF colors to match sample (orange, pink, purple, teal, green, peach)
+- **BREAKING**: Browser extension now imports courses to user library instead of semester catalogs
+- Simplified browser extension workflow by removing semester selection step
+- Updated extension popup UI to show library stats (total/remaining slots) after import
 
 ### Fixed
 - Fixed profile picture not loading on dashboard (was hardcoded to feature-1.png instead of using profile.avatar_url)
@@ -33,6 +37,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed CSV import error - added better validation and error logging for missing/invalid fields
 - Fixed Clear button in course library that was never pressable
 - Improved PDF exporter schedule parsing to handle "Th" (Thursday) and all day variations correctly
+- Fixed Next.js 15 async params warning in `/api/users/[userId]/semesters` endpoint by awaiting params
+- Fixed browser extension authentication error by properly handling userId in API requests
 
 ## [0.1.0] - 2025-11-02
 
