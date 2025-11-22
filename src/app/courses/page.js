@@ -511,7 +511,9 @@ export default function CoursesPage() {
                             {course.enrolled_current}/{course.enrolled_total}
                           </div>
                           <div className="text-xs text-gray-600 font-medium">
-                            {Math.round((course.enrolled_current / course.enrolled_total) * 100)}% full
+                            {course.enrolled_total > 0
+                              ? `${Math.round((course.enrolled_current / course.enrolled_total) * 100)}% full`
+                              : 'N/A'}
                           </div>
                         </div>
                       </td>
