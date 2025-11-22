@@ -6,8 +6,124 @@
  */
 
 import { NextResponse } from 'next/server';
-import { supabase } from '../../../../../lib/supabase.js';
-import UserCourseAPI from '../../../../../../lib/api/userCourseAPI.js';
+import { createClient } from '@supabase/supabase-js';
+
+// Supabase server-side client creation
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_API;
+const supabaseAnonKey = process.env.NEXT_PUBLIC_PUBLIC_API_KEY;
+
+/**
+ * Helper function to save a single course with authenticated client
+ */
+async function saveCourse(supabase, userId, courseData, source = 'extension') {
+  // Validate required fields
+  const courseCode = courseData.courseCode || courseData.course_code;
+  const courseName = courseData.courseName || courseData.course_name;
+  const sectionGroup = parseInt(courseData.sectionGroup || courseData.section_group) || 1;
+
+  if (!courseCode || !courseName) {
+    throw new Error(`Missing required fields: courseCode="${courseCode}", courseName="${courseName}"`);
+  }
+
+  // Check if course already exists for this user
+  const { data: existing, error: existingError } = await supabase
+    .from('user_courses')
+    .select('id')
+    .eq('user_id', userId)
+    .eq('course_code', courseCode)
+    .eq('section_group', sectionGroup)
+    .maybeSingle();
+
+  if (existingError) throw existingError;
+
+  if (existing) {
+    // Course already saved, update the source
+    const { data, error } = await supabase
+      .from('user_courses')
+      .update({ source })
+      .eq('id', existing.id)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
+  }
+
+  // Insert new course
+  const { data, error } = await supabase
+    .from('user_courses')
+    .insert({
+      user_id: userId,
+      course_code: courseCode,
+      course_name: courseName,
+      section_group: sectionGroup,
+      schedule: courseData.schedule || '',
+      enrolled_current: parseInt(courseData.enrolledCurrent || courseData.enrolled_current) || 0,
+      enrolled_total: parseInt(courseData.enrolledTotal || courseData.enrolled_total) || 0,
+      room: courseData.room || null,
+      instructor: courseData.instructor || null,
+      source: source,
+    })
+    .select()
+    .single();
+
+  if (error) {
+    console.error('Supabase insert error:', error);
+    throw new Error(`Failed to save course: ${error.message}`);
+  }
+
+  return data;
+}
+
+/**
+ * Helper function to get course stats
+ */
+async function getCourseStats(supabase, userId) {
+  const { data, error } = await supabase
+    .from('user_courses')
+    .select('source')
+    .eq('user_id', userId);
+
+  if (error) throw error;
+
+  const stats = {
+    total: data.length,
+    manual: data.filter(c => c.source === 'manual').length,
+    csv: data.filter(c => c.source === 'csv').length,
+    extension: data.filter(c => c.source === 'extension').length,
+    remaining: 50 - data.length,
+  };
+
+  return stats;
+}
+
+/**
+ * Helper function to save multiple courses
+ */
+async function saveCourses(supabase, userId, coursesData, source = 'extension') {
+  const savedCourses = [];
+  const errors = [];
+
+  for (const courseData of coursesData) {
+    try {
+      const saved = await saveCourse(supabase, userId, courseData, source);
+      savedCourses.push(saved);
+    } catch (error) {
+      errors.push({
+        course: `${courseData.courseCode} - Section ${courseData.sectionGroup || courseData.section_group}`,
+        error: error.message,
+      });
+    }
+  }
+
+  return {
+    success: savedCourses,
+    errors: errors,
+    message: errors.length > 0
+      ? `Saved ${savedCourses.length}/${coursesData.length} courses. ${errors.length} failed.`
+      : `Successfully saved all ${savedCourses.length} courses`,
+  };
+}
 
 /**
  * POST /api/users/{userId}/courses
@@ -26,8 +142,19 @@ export async function POST(request, { params }) {
       );
     }
 
-    // Extract and verify token
+    // Extract token
     const token = authHeader.split(' ')[1];
+
+    // Create authenticated Supabase client for this request
+    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+      global: {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      }
+    });
+
+    // Verify token
     const { data: { user }, error } = await supabase.auth.getUser(token);
 
     if (error || !user) {
@@ -58,7 +185,7 @@ export async function POST(request, { params }) {
     }
 
     // Check current course count
-    const stats = await UserCourseAPI.getCourseStats(userId);
+    const stats = await getCourseStats(supabase, userId);
     const available = stats.remaining;
 
     if (available === 0) {
@@ -84,15 +211,15 @@ export async function POST(request, { params }) {
       limitWarning = `Only importing first ${available} courses due to 50-course limit. ${courses.length - available} courses were skipped.`;
     }
 
-    // Import courses using UserCourseAPI (source = 'extension')
-    const result = await UserCourseAPI.saveCourses(userId, coursesToImport, 'extension');
+    // Import courses using authenticated client
+    const result = await saveCourses(supabase, userId, coursesToImport, 'extension');
 
     // Prepare response
     const response = {
       message: result.message,
       coursesImported: result.success.length,
       coursesSkipped: result.errors.length,
-      stats: await UserCourseAPI.getCourseStats(userId)
+      stats: await getCourseStats(supabase, userId)
     };
 
     if (limitWarning) {
@@ -131,8 +258,19 @@ export async function GET(request, { params }) {
       );
     }
 
-    // Extract and verify token
+    // Extract token
     const token = authHeader.split(' ')[1];
+
+    // Create authenticated Supabase client
+    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+      global: {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      }
+    });
+
+    // Verify token
     const { data: { user }, error } = await supabase.auth.getUser(token);
 
     if (error || !user) {
@@ -151,9 +289,17 @@ export async function GET(request, { params }) {
       );
     }
 
-    // Fetch courses and stats
-    const courses = await UserCourseAPI.getUserCourses(userId);
-    const stats = await UserCourseAPI.getCourseStats(userId);
+    // Fetch courses
+    const { data: courses, error: coursesError } = await supabase
+      .from('user_courses')
+      .select('*')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false });
+
+    if (coursesError) throw coursesError;
+
+    // Get stats
+    const stats = await getCourseStats(supabase, userId);
 
     return NextResponse.json({
       courses,
