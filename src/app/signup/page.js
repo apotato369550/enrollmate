@@ -4,8 +4,11 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { supabase } from '../../lib/supabase';
 import { useRouter } from 'next/navigation';
+import AuthPageBackground from '../../components/AuthPageBackground';
+import { useDarkMode } from '../../lib/useDarkMode';
 
 export default function SignupPage() {
+  const { isDarkMode } = useDarkMode();
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -143,27 +146,16 @@ export default function SignupPage() {
   };
 
   return (
-    <div className="min-h-screen relative overflow-hidden">
-      {/* Background with gradient */}
-      <div className="absolute inset-0 bg-gradient-to-br from-enrollmate-bg-start to-enrollmate-bg-end" />
-
-      {/* Diamond decoration background */}
-      <div
-        className="absolute inset-0 opacity-56"
-        style={{
-          backgroundImage:
-            "url('/assets/images/login-background.png')",
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-          backgroundRepeat: 'no-repeat',
-        }}
-      />
+    <div className={`min-h-screen relative overflow-hidden ${isDarkMode ? 'bg-[#3a3a3a]' : ''}`}>
+      <AuthPageBackground isDarkMode={isDarkMode} />
 
       {/* Main content */}
       <div className="relative z-10 min-h-screen flex items-center justify-center p-4 py-10">
         <div className="w-full max-w-2xl">
           <div className="flex justify-center relative z-20 -mb-14 sm:-mb-20">
-            <div className="rounded-full p-3 bg-white/95 border-4 border-[#9DF313] inline-flex items-center justify-center shadow-md">
+            <div className={`rounded-full p-3 bg-white/95 border-4 transition-colors duration-300 inline-flex items-center justify-center shadow-md ${
+              isDarkMode ? 'border-gray-300' : 'border-[#9DF313]'
+            }`}>
               <img
                 src="/assets/images/logo-or-icon.png"
                 alt="EnrollMate"
@@ -288,7 +280,11 @@ export default function SignupPage() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="w-full bg-gradient-to-r from-[#9DF313] to-[#7CB342] text-white font-jakarta font-medium text-lg py-3 rounded-2xl shadow-sm hover:shadow-lg transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className={`w-full font-jakarta font-medium text-lg py-3 rounded-2xl shadow-sm hover:shadow-lg transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed ${
+                    isDarkMode
+                      ? 'bg-white text-black hover:bg-gray-100'
+                      : 'bg-gradient-to-r from-[#9DF313] to-[#7CB342] text-white hover:opacity-90'
+                  }`}
                 >
                   {loading ? 'Creating account...' : 'Create account'}
                 </button>
