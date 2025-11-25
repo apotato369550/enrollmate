@@ -5,6 +5,8 @@
  * This script uses the existing Supabase client configuration
  */
 
+import 'dotenv/config';
+
 import { createClient } from '@supabase/supabase-js';
 import { readFileSync } from 'fs';
 import { fileURLToPath } from 'url';
