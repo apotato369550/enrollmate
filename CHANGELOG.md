@@ -18,6 +18,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added API_DOCUMENTATION.md with complete Chrome extension integration guide
 - Updated README.md with API usage examples and quick start guide
 - Added new API endpoint `/api/users/[userId]/courses` for importing courses directly to user library (GET/POST)
+- Added dynamic time range calculation for PDF export based on actual course times
+- Added `_calculateTimeRange()` method to automatically detect earliest/latest course times
 
 ### Changed
 - Updated root CLAUDE.md to reference subdirectory documentation files
@@ -29,6 +31,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **BREAKING**: Browser extension now imports courses to user library instead of semester catalogs
 - Simplified browser extension workflow by removing semester selection step
 - Updated extension popup UI to show library stats (total/remaining slots) after import
+- **Improved PDF export**: Now dynamically adapts to course schedules from early morning to late evening (supports 9 PM+ classes)
+- Changed time format in PDF from single time to time range (e.g., "09:00 AM-09:30 AM")
+- Optimized PDF table styling for better fit on one page (reduced padding, font sizes)
+- Enhanced PDF scaling to automatically fit content on single page regardless of schedule length
 
 ### Fixed
 - Fixed profile picture not loading on dashboard (was hardcoded to feature-1.png instead of using profile.avatar_url)
@@ -39,6 +45,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Improved PDF exporter schedule parsing to handle "Th" (Thursday) and all day variations correctly
 - Fixed Next.js 15 async params warning in `/api/users/[userId]/semesters` endpoint by awaiting params
 - Fixed browser extension authentication error by properly handling userId in API requests
+- Fixed PDF export not showing classes before 9 AM (was hard-coded to start at 9 AM)
+- Fixed PDF export taking multiple pages by implementing proper scaling and dimension calculation
+- Fixed PDF export not adapting to late evening classes (now supports schedules up to any end time)
 
 ## [0.1.0] - 2025-11-02
 
