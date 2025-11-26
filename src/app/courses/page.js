@@ -508,10 +508,10 @@ export default function CoursesPage() {
                       <td className="px-6 py-4 text-center font-jakarta">
                         <div className="inline-flex flex-col items-center px-3 py-2 bg-enrollmate-green/10 rounded-lg">
                           <div className="text-sm font-bold text-enrollmate-green">
-                            {course.enrolled_current}/{course.enrolled_total}
+                            {course.enrolled_current ?? 0}/{course.enrolled_total ?? 0}
                           </div>
                           <div className="text-xs text-gray-600 font-medium">
-                            {course.enrolled_total > 0
+                            {course.enrolled_total > 0 && course.enrolled_current !== null && course.enrolled_current !== undefined
                               ? `${Math.round((course.enrolled_current / course.enrolled_total) * 100)}% full`
                               : 'N/A'}
                           </div>

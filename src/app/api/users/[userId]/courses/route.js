@@ -13,6 +13,43 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_API;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_PUBLIC_API_KEY;
 
 /**
+ * Safely parse integer with fallback to default value
+ * Validates that result is a valid non-negative integer
+ */
+function parseIntSafe(value, defaultValue = 0) {
+  const num = parseInt(value, 10);
+  return Number.isInteger(num) && num >= 0 ? num : defaultValue;
+}
+
+/**
+ * Parse enrollment from room field if it contains enrollment data (e.g., "30/40")
+ * Returns { enrolledCurrent, enrolledTotal, actualRoom }
+ */
+function parseEnrollmentFromRoom(courseData) {
+  const room = courseData.room || '';
+
+  // Check if room contains enrollment pattern (e.g., "30/40")
+  const enrollmentPattern = /^(\d+)\s*\/\s*(\d+)$/;
+  const match = room.match(enrollmentPattern);
+
+  if (match) {
+    // Room field contains enrollment data
+    return {
+      enrolledCurrent: parseIntSafe(match[1]),
+      enrolledTotal: parseIntSafe(match[2]),
+      actualRoom: null  // Room was actually enrollment, so no real room data
+    };
+  }
+
+  // Room field is actual room data, use provided enrollment fields
+  return {
+    enrolledCurrent: parseIntSafe(courseData.enrolledCurrent || courseData.enrolled_current),
+    enrolledTotal: parseIntSafe(courseData.enrolledTotal || courseData.enrolled_total),
+    actualRoom: room || null
+  };
+}
+
+/**
  * Helper function to save a single course with authenticated client
  */
 async function saveCourse(supabase, userId, courseData, source = 'extension') {
@@ -49,6 +86,9 @@ async function saveCourse(supabase, userId, courseData, source = 'extension') {
     return data;
   }
 
+  // Parse enrollment data (might be in room field due to extension mapping issue)
+  const { enrolledCurrent, enrolledTotal, actualRoom } = parseEnrollmentFromRoom(courseData);
+
   // Insert new course
   const { data, error } = await supabase
     .from('user_courses')
@@ -58,9 +98,9 @@ async function saveCourse(supabase, userId, courseData, source = 'extension') {
       course_name: courseName,
       section_group: sectionGroup,
       schedule: courseData.schedule || '',
-      enrolled_current: parseInt(courseData.enrolledCurrent || courseData.enrolled_current) || 0,
-      enrolled_total: parseInt(courseData.enrolledTotal || courseData.enrolled_total) || 0,
-      room: courseData.room || null,
+      enrolled_current: enrolledCurrent,
+      enrolled_total: enrolledTotal,
+      room: actualRoom,
       instructor: courseData.instructor || null,
       source: source,
     })
