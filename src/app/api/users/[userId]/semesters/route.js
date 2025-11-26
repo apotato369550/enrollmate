@@ -15,7 +15,7 @@ import { SemesterAPI } from '../../../../../../lib/api/semesterAPI.js';
  */
 export async function GET(request, { params }) {
   try {
-    const { userId } = params;
+    const { userId } = await params;
     const authHeader = request.headers.get('authorization');
 
     // Validate authorization header
