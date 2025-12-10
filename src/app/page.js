@@ -1,8 +1,18 @@
+'use client';
+
+import { useDarkMode } from '../lib/useDarkMode';
+
 export default function Home() {
- return (
-    <div className="min-h-screen">
+  const { isDarkMode, toggleDarkMode } = useDarkMode();
+
+  return (
+    <div className={`min-h-screen ${isDarkMode ? 'bg-[#3a3a3a]' : ''}`}>
       {/* Sticky Header */}
-      <header className="sticky top-0 z-50 bg-gradient-to-r from-enrollmate-bg-start to-enrollmate-bg-end shadow-lg">
+      <header className={`sticky top-0 z-50 shadow-lg transition-colors duration-300 ${
+        isDarkMode 
+          ? 'bg-[#3a3a3a]' 
+          : 'bg-gradient-to-r from-enrollmate-bg-start to-enrollmate-bg-end'
+      }`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 sm:h-24 flex items-center justify-between">
           {/* Logo */}
           <div className="flex items-center">
@@ -27,6 +37,41 @@ export default function Home() {
             >
               Signup
             </a>
+            <button
+              onClick={toggleDarkMode}
+              className="flex items-center gap-2 px-4 py-2 rounded-full text-white font-jakarta font-bold text-sm sm:text-base md:text-lg lg:text-xl drop-shadow-lg hover:text-white/90 transition-colors bg-white/10 hover:bg-white/20"
+            >
+              <span>{isDarkMode ? 'Light Mode' : 'Dark Mode'}</span>
+              {isDarkMode ? (
+                <svg 
+                  className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6" 
+                  fill="none" 
+                  stroke="currentColor" 
+                  viewBox="0 0 24 24"
+                >
+                  <path 
+                    strokeLinecap="round" 
+                    strokeLinejoin="round" 
+                    strokeWidth={2} 
+                    d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" 
+                  />
+                </svg>
+              ) : (
+                <svg 
+                  className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6" 
+                  fill="none" 
+                  stroke="currentColor" 
+                  viewBox="0 0 24 24"
+                >
+                  <path 
+                    strokeLinecap="round" 
+                    strokeLinejoin="round" 
+                    strokeWidth={2} 
+                    d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" 
+                  />
+                </svg>
+              )}
+            </button>
           </nav>
         </div>
       </header>
@@ -35,7 +80,11 @@ export default function Home() {
       <section className="relative min-h-screen">
         {/* Background with gradient */}
         <div
-          className="absolute inset-0 bg-gradient-to-br from-enrollmate-bg-start to-enrollmate-bg-end"
+          className={`absolute inset-0 transition-colors duration-300 ${
+            isDarkMode 
+              ? 'bg-[#2d2d2d]' 
+              : 'bg-gradient-to-br from-enrollmate-bg-start to-enrollmate-bg-end'
+          }`}
         />
 
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -55,8 +104,16 @@ export default function Home() {
               
               {/* CTA Button */}
               <div className="pt-4 lg:pt-8">
-                <button className="bg-white hover:bg-gray-50 transition-colors duration-200 rounded-full border-4 sm:border-8 border-orange-50 px-8 sm:px-12 lg:px-16 py-3 sm:py-4 lg:py-5 shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-200">
-                  <span className="text-enrollmate-green font-jakarta font-bold text-xl sm:text-2xl lg:text-3xl xl:text-4xl">
+                <button className={`transition-colors duration-200 rounded-full border-4 sm:border-8 border-orange-50 px-8 sm:px-12 lg:px-16 py-3 sm:py-4 lg:py-5 shadow-xl hover:shadow-2xl transform hover:scale-105 transition-all duration-200 ${
+                  isDarkMode 
+                    ? 'bg-white hover:bg-gray-100' 
+                    : 'bg-white hover:bg-gray-50'
+                }`}>
+                  <span className={`font-jakarta font-bold text-xl sm:text-2xl lg:text-3xl xl:text-4xl ${
+                    isDarkMode 
+                      ? 'text-black' 
+                      : 'text-enrollmate-green'
+                  }`}>
                     Getting Started
                   </span>
                 </button>
@@ -84,7 +141,11 @@ export default function Home() {
       <section className="relative py-16 lg:py-24">
         {/* Background with gradient */}
         <div
-          className="absolute inset-0 bg-gradient-to-br from-enrollmate-bg-start to-enrollmate-bg-end"
+          className={`absolute inset-0 transition-colors duration-300 ${
+            isDarkMode 
+              ? 'bg-[#2d2d2d]' 
+              : 'bg-gradient-to-br from-enrollmate-bg-start to-enrollmate-bg-end'
+          }`}
         />
 
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -183,7 +244,11 @@ export default function Home() {
       {/* Footer */}
       <footer className="relative">
         {/* Footer bar with shadow */}
-        <div className="w-full bg-gradient-to-r from-enrollmate-bg-start to-enrollmate-bg-end shadow-lg">
+        <div className={`w-full shadow-lg transition-colors duration-300 ${
+          isDarkMode 
+            ? 'bg-[#2d2d2d]' 
+            : 'bg-gradient-to-r from-enrollmate-bg-start to-enrollmate-bg-end'
+        }`}>
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-8">
             <div className="flex flex-col lg:flex-row justify-between items-center space-y-6 lg:space-y-0">
               
