@@ -4,6 +4,9 @@ import Script from "next/script";
 export const metadata = {
   title: "EnrollMate",
   description: "Never struggle with enrollment again",
+  icons: {
+    icon: '/icon.png',
+  },
 };
 
 export default function RootLayout({ children }) {
