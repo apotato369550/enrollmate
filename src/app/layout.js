@@ -9,7 +9,7 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
-      <body className="antialiased font-jakarta">
+      <body className="antialiased font-jakarta" suppressHydrationWarning={true}>
         {children}
         <Script
           id="fetch-guard"

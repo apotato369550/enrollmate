@@ -23,6 +23,9 @@ export default function Profile() {
   const [passwordSaving, setPasswordSaving] = useState(false);
   const router = useRouter();
 
+  // Fallback image in case the user hasn't uploaded one yet
+  const DEFAULT_AVATAR = 'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png';
+
   useEffect(() => {
     const getUser = async () => {
       const { data: { user } } = await supabase.auth.getUser();
@@ -42,6 +45,7 @@ export default function Profile() {
           program: profile?.program || '',
           year_level: profile?.year_level || '',
           contact_number: profile?.contact_number || '',
+          avatar_url: profile?.avatar_url || '',
         });
       }
       setLoading(false);
@@ -57,92 +61,72 @@ export default function Profile() {
     }
   };
 
+  // --- UPDATED: Instant Preview + Background Upload ---
   const handleFileChange = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
-    console.log('File selected:', file.name, 'Size:', file.size, 'Type:', file.type);
-
-    // Check file constraints
+    // 1. Validation
     const maxSize = 5 * 1024 * 1024; // 5MB
     const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
 
     if (file.size > maxSize) {
-      console.error('File too large:', file.size, 'Max allowed:', maxSize);
       setErrors({ avatar: 'File size must be less than 5MB' });
       return;
     }
-
     if (!allowedTypes.includes(file.type)) {
-      console.error('Invalid file type:', file.type, 'Allowed types:', allowedTypes);
       setErrors({ avatar: 'File must be an image (JPEG, PNG, GIF, WebP)' });
       return;
     }
 
-    // Upload to Supabase storage
-    // Note: Ensure a storage bucket named 'avatars' exists in Supabase with public access
-    const fileExt = file.name.split('.').pop();
-    const fileName = `${user.id}.${fileExt}`;
-    console.log('=== AVATAR UPLOAD DEBUG INFO ===');
-    console.log('Attempting upload to bucket "avatars" with fileName:', fileName);
-    console.log('User ID:', user.id);
-    console.log('User authenticated:', !!user);
-    console.log('File details:', {
-      name: file.name,
-      size: file.size,
-      type: file.type,
-      ext: fileExt
-    });
+    // 2. INSTANT PREVIEW: Create local URL for immediate feedback
+    const localPreviewUrl = URL.createObjectURL(file);
+    setFormData(prev => ({ ...prev, avatar_url: localPreviewUrl }));
+    setErrors(prev => ({ ...prev, avatar: null })); // Clear errors
 
-    // Check if bucket exists first
-    console.log('Checking if avatars bucket exists...');
-    const { data: buckets, error: bucketsError } = await supabase.storage.listBuckets();
-    if (bucketsError) {
-      console.error('Error listing buckets:', bucketsError);
-    } else {
-      const avatarBucket = buckets.find(bucket => bucket.name === 'avatars');
-      console.log('Avatars bucket found:', !!avatarBucket);
-      if (avatarBucket) {
-        console.log('Avatars bucket details:', avatarBucket);
-      }
+    try {
+      console.log('Uploading in background...');
+
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${user.id}.${fileExt}`;
+
+      // 3. Upload to Supabase
+      const { error: uploadError } = await supabase.storage
+        .from('avatars')
+        .upload(fileName, file, {
+          cacheControl: '3600',
+          upsert: true
+        });
+
+      if (uploadError) throw uploadError;
+
+      // 4. Get Real URL + Timestamp (Cache Busting)
+      const { data: { publicUrl } } = supabase.storage
+        .from('avatars')
+        .getPublicUrl(fileName);
+
+      const publicUrlWithTimestamp = `${publicUrl}?t=${new Date().getTime()}`;
+      
+      console.log('Upload finished. Server URL:', publicUrlWithTimestamp);
+
+      // Update state with the REAL url so it saves to DB correctly
+      setFormData(prev => ({ ...prev, avatar_url: publicUrlWithTimestamp }));
+      
+    } catch (error) {
+      console.error('Upload error:', error);
+      setErrors({ avatar: `Upload failed: ${error.message}` });
     }
-
-    console.log('Starting actual upload...');
-    const { data, error } = await supabase.storage
-      .from('avatars') // Assuming bucket name 'avatars'
-      .upload(fileName, file, { upsert: true });
-
-    if (error) {
-      console.error('=== SUPABASE STORAGE UPLOAD ERROR ===');
-      console.error('Supabase storage upload error:', error);
-      console.log('Error details:', {
-        message: error.message,
-        statusCode: error.statusCode,
-        details: error.details,
-        hint: error.hint
-      });
-      console.log('This is likely an RLS policy issue. Check your Supabase dashboard.');
-      setErrors({ avatar: `Upload failed: ${error.message}. This may be due to missing RLS policies.` });
-      return;
-    }
-
-    console.log('Upload successful, data:', data);
-
-    const { data: { publicUrl } } = supabase.storage
-      .from('avatars')
-      .getPublicUrl(fileName);
-
-    console.log('Public URL generated:', publicUrl);
-    setFormData(prev => ({ ...prev, avatar_url: publicUrl }));
   };
 
   const validateForm = () => {
     const newErrors = {};
-    if (!formData.first_name.trim()) newErrors.first_name = 'First name is required';
-    if (!formData.last_name.trim()) newErrors.last_name = 'Last name is required';
-    if (!formData.student_id.trim()) newErrors.student_id = 'Student ID is required';
-    if (!formData.email.trim()) newErrors.email = 'Email is required';
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) newErrors.email = 'Invalid email';
+    if (!formData.first_name?.trim()) newErrors.first_name = 'First name is required';
+    if (!formData.last_name?.trim()) newErrors.last_name = 'Last name is required';
+    if (!formData.student_id?.trim()) newErrors.student_id = 'Student ID is required';
+    if (!formData.email?.trim()) newErrors.email = 'Email is required';
+    // Simple email regex
+    if (formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) newErrors.email = 'Invalid email';
+    
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -162,13 +146,15 @@ export default function Profile() {
         if (emailError) {
           console.error('Email update error:', emailError);
           setErrors({ email: emailError.message });
+          setSaving(false);
           return;
         }
         console.log('Email updated successfully');
       }
 
+      // --- CRITICAL FIX: Use Optional Chaining (?.student_id) ---
       // Check if student_id is unique (if changed)
-      if (formData.student_id !== profile.student_id) {
+      if (formData.student_id !== profile?.student_id) {
         console.log('Checking student ID uniqueness...');
         const { data: existing } = await supabase
           .from('profiles')
@@ -179,29 +165,32 @@ export default function Profile() {
         if (existing) {
           console.log('Student ID already exists');
           setErrors({ student_id: 'Student ID already taken' });
+          setSaving(false);
           return;
         }
         console.log('Student ID is unique');
       }
 
-      // Update profile
+      // --- CRITICAL FIX: Use .upsert() instead of .update() ---
       console.log('Updating profile in database...');
       const { error } = await supabase
         .from('profiles')
-        .update({
+        .upsert({
+          id: user.id, // Required for upsert
           first_name: formData.first_name,
           last_name: formData.last_name,
           student_id: formData.student_id,
           program: formData.program,
           year_level: formData.year_level,
           contact_number: formData.contact_number,
-          avatar_url: formData.avatar_url,
-        })
-        .eq('id', user.id);
+          avatar_url: formData.avatar_url, // This will save the latest URL
+          updated_at: new Date().toISOString(),
+        });
 
       if (error) {
         console.error('Profile update error:', error);
         setErrors({ general: error.message });
+        setSaving(false);
         return;
       }
       console.log('Profile updated successfully');
@@ -378,8 +367,6 @@ export default function Profile() {
                 </Link>
                 <h1 className="text-white font-jakarta font-bold text-2xl md:text-3xl">Profile</h1>
               </div>
-
-              {/* Top actions removed as requested */}
               <div />
             </div>
 
@@ -389,16 +376,20 @@ export default function Profile() {
                 {/* Left - Avatar */}
                 <div className="flex flex-col items-center lg:items-start gap-6">
                   <div className="relative">
-                    <div className="w-40 h-40 md:w-48 md:h-48 lg:w-56 lg:h-56 rounded-full ring-4 ring-white shadow-xl overflow-hidden">
+                    <div className="w-40 h-40 md:w-48 md:h-48 lg:w-56 lg:h-56 rounded-full ring-4 ring-white shadow-xl overflow-hidden bg-gray-100">
                       <img
-                        src={isEditing ? (formData.avatar_url || '/assets/images/default-avatar.png') : (profile?.avatar_url || '/assets/images/default-avatar.png')}
+                        src={isEditing 
+                          ? (formData.avatar_url || DEFAULT_AVATAR) 
+                          : (profile?.avatar_url || DEFAULT_AVATAR)
+                        }
                         alt="Profile"
                         className="w-full h-full object-cover"
+                        onError={(e) => { e.target.src = DEFAULT_AVATAR; }}
                       />
                       {isEditing && (
                         <>
-                          <div className="absolute inset-0 bg-black bg-opacity-50 rounded-full flex items-center justify-center">
-                            <span className="text-white text-sm">Click to change</span>
+                          <div className="absolute inset-0 bg-black bg-opacity-50 rounded-full flex items-center justify-center transition-opacity hover:bg-opacity-60">
+                            <span className="text-white text-sm font-medium">Click to change</span>
                           </div>
                           <input
                             type="file"
@@ -411,7 +402,7 @@ export default function Profile() {
                     </div>
                   </div>
 
-                  <div className="text-center lg:text-left">
+                  <div className="text-center lg:text-left w-full">
                     {isEditing ? (
                       <div className="space-y-2">
                         <input
@@ -434,9 +425,11 @@ export default function Profile() {
                         {errors.last_name && <p className="text-red-500 text-sm">{errors.last_name}</p>}
                       </div>
                     ) : (
-                      <h2 className="text-[#111827] font-jakarta font-bold text-xl md:text-2xl">{profile ? `${profile.first_name} ${profile.last_name}` : 'Not set'}</h2>
+                      <h2 className="text-[#111827] font-jakarta font-bold text-xl md:text-2xl">
+                        {profile ? `${profile.first_name} ${profile.last_name}` : 'New Student'}
+                      </h2>
                     )}
-                    <p className="text-sm text-gray-500">{profile?.program || 'Program not set'}</p>
+                    <p className="text-sm text-gray-500 mt-1">{profile?.program || 'Program not set'}</p>
                   </div>
                 </div>
 
@@ -444,31 +437,30 @@ export default function Profile() {
                 <div className="lg:col-span-2">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                      <label className="block text-sm text-gray-500 font-semibold mb-2">Full Name</label>
+                      <label className="block text-sm text-gray-500 font-semibold mb-2">First Name</label>
                       {isEditing ? (
-                        <div className="space-y-2">
-                          <input
-                            type="text"
-                            name="first_name"
-                            value={formData.first_name}
-                            onChange={handleInputChange}
-                            placeholder="First Name"
-                            className="w-full px-4 py-3 border border-gray-300 rounded-md"
-                          />
-                          <input
-                            type="text"
-                            name="last_name"
-                            value={formData.last_name}
-                            onChange={handleInputChange}
-                            placeholder="Last Name"
-                            className="w-full px-4 py-3 border border-gray-300 rounded-md"
-                          />
-                        </div>
+                         // Handled in left column for name, but keeping structure if you want separate fields
+                         <div className="p-3 bg-gray-50 rounded text-gray-500 text-sm italic">
+                           Edit name under profile picture
+                         </div>
                       ) : (
-                        <div className="bg-white px-4 py-3 rounded-md text-gray-700">{profile ? `${profile.first_name} ${profile.last_name}` : 'Not set'}</div>
+                        <div className="bg-white px-4 py-3 rounded-md text-gray-700 border border-gray-100">
+                            {profile?.first_name || 'Not set'}
+                        </div>
                       )}
-                      {errors.first_name && <p className="text-red-500 text-sm">{errors.first_name}</p>}
-                      {errors.last_name && <p className="text-red-500 text-sm">{errors.last_name}</p>}
+                    </div>
+                     
+                    <div>
+                        <label className="block text-sm text-gray-500 font-semibold mb-2">Last Name</label>
+                        {isEditing ? (
+                             <div className="p-3 bg-gray-50 rounded text-gray-500 text-sm italic">
+                             Edit name under profile picture
+                           </div>
+                        ) : (
+                            <div className="bg-white px-4 py-3 rounded-md text-gray-700 border border-gray-100">
+                                {profile?.last_name || 'Not set'}
+                            </div>
+                        )}
                     </div>
 
                     <div>
@@ -480,10 +472,10 @@ export default function Profile() {
                           value={formData.email}
                           onChange={handleInputChange}
                           placeholder="Email"
-                          className="w-full px-4 py-3 border border-gray-300 rounded-md"
+                          className="w-full px-4 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-enrollmate-green/20 focus:border-enrollmate-green outline-none transition-all"
                         />
                       ) : (
-                        <div className="bg-white px-4 py-3 rounded-md text-gray-700">{user?.email || 'Not set'}</div>
+                        <div className="bg-white px-4 py-3 rounded-md text-gray-700 border border-gray-100">{user?.email || 'Not set'}</div>
                       )}
                       {errors.email && <p className="text-red-500 text-sm">{errors.email}</p>}
                     </div>
@@ -497,10 +489,10 @@ export default function Profile() {
                           value={formData.student_id}
                           onChange={handleInputChange}
                           placeholder="Student ID"
-                          className="w-full px-4 py-3 border border-gray-300 rounded-md"
+                          className="w-full px-4 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-enrollmate-green/20 focus:border-enrollmate-green outline-none transition-all"
                         />
                       ) : (
-                        <div className="bg-white px-4 py-3 rounded-md text-gray-700">{profile?.student_id || 'Not set'}</div>
+                        <div className="bg-white px-4 py-3 rounded-md text-gray-700 border border-gray-100">{profile?.student_id || 'Not set'}</div>
                       )}
                       {errors.student_id && <p className="text-red-500 text-sm">{errors.student_id}</p>}
                     </div>
@@ -514,10 +506,10 @@ export default function Profile() {
                           value={formData.program}
                           onChange={handleInputChange}
                           placeholder="Program"
-                          className="w-full px-4 py-3 border border-gray-300 rounded-md"
+                          className="w-full px-4 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-enrollmate-green/20 focus:border-enrollmate-green outline-none transition-all"
                         />
                       ) : (
-                        <div className="bg-white px-4 py-3 rounded-md text-gray-700">{profile?.program || 'Not set'}</div>
+                        <div className="bg-white px-4 py-3 rounded-md text-gray-700 border border-gray-100">{profile?.program || 'Not set'}</div>
                       )}
                     </div>
 
@@ -530,10 +522,10 @@ export default function Profile() {
                           value={formData.year_level}
                           onChange={handleInputChange}
                           placeholder="Year Level"
-                          className="w-full px-4 py-3 border border-gray-300 rounded-md"
+                          className="w-full px-4 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-enrollmate-green/20 focus:border-enrollmate-green outline-none transition-all"
                         />
                       ) : (
-                        <div className="bg-white px-4 py-3 rounded-md text-gray-700">{profile?.year_level || 'Not set'}</div>
+                        <div className="bg-white px-4 py-3 rounded-md text-gray-700 border border-gray-100">{profile?.year_level || 'Not set'}</div>
                       )}
                     </div>
 
@@ -546,21 +538,21 @@ export default function Profile() {
                           value={formData.contact_number}
                           onChange={handleInputChange}
                           placeholder="Contact Number"
-                          className="w-full px-4 py-3 border border-gray-300 rounded-md"
+                          className="w-full px-4 py-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-enrollmate-green/20 focus:border-enrollmate-green outline-none transition-all"
                         />
                       ) : (
-                        <div className="bg-white px-4 py-3 rounded-md text-gray-700">{profile?.contact_number || 'Not set'}</div>
+                        <div className="bg-white px-4 py-3 rounded-md text-gray-700 border border-gray-100">{profile?.contact_number || 'Not set'}</div>
                       )}
                     </div>
                   </div>
 
-                  {errors.general && <p className="text-red-500 text-sm mt-4">{errors.general}</p>}
-                  {errors.avatar && <p className="text-red-500 text-sm mt-4">{errors.avatar}</p>}
+                  {errors.general && <p className="text-red-500 text-sm mt-4 p-3 bg-red-50 rounded">{errors.general}</p>}
+                  {errors.avatar && <p className="text-red-500 text-sm mt-4 p-3 bg-red-50 rounded">{errors.avatar}</p>}
 
                   {/* Change Password Modal */}
                   {isChangingPassword && (
-                    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-                      <div className="bg-white rounded-lg p-6 w-full max-w-md">
+                    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
+                      <div className="bg-white rounded-lg p-6 w-full max-w-md shadow-2xl">
                         <h3 className="text-lg font-semibold mb-4">Change Password</h3>
 
                         <div className="space-y-4">
@@ -624,13 +616,13 @@ export default function Profile() {
                           <button
                             onClick={handlePasswordChange}
                             disabled={passwordSaving}
-                            className="flex-1 px-4 py-2 bg-enrollmate-green text-white rounded-md font-jakarta font-semibold shadow disabled:opacity-50"
+                            className="flex-1 px-4 py-2 bg-enrollmate-green text-white rounded-md font-jakarta font-semibold shadow disabled:opacity-50 hover:opacity-90 transition-opacity"
                           >
                             {passwordSaving ? 'Changing...' : 'Change Password'}
                           </button>
                           <button
                             onClick={handlePasswordCancel}
-                            className="flex-1 px-4 py-2 bg-gray-500 text-white rounded-md font-jakarta shadow"
+                            className="flex-1 px-4 py-2 bg-gray-500 text-white rounded-md font-jakarta shadow hover:bg-gray-600 transition-colors"
                           >
                             Cancel
                           </button>
@@ -642,16 +634,16 @@ export default function Profile() {
                   <div className="mt-8 flex flex-wrap gap-3">
                     {isEditing ? (
                       <>
-                        <button onClick={handleSave} disabled={saving} className="px-4 py-2 bg-enrollmate-green text-white rounded-md font-jakarta font-semibold shadow disabled:opacity-50">
+                        <button onClick={handleSave} disabled={saving} className="px-6 py-2.5 bg-enrollmate-green text-white rounded-md font-jakarta font-semibold shadow hover:shadow-md transition-all disabled:opacity-50 hover:scale-[1.02]">
                           {saving ? 'Saving...' : 'Save Changes'}
                         </button>
-                        <button onClick={handleCancel} className="px-4 py-2 bg-gray-500 text-white rounded-md font-jakarta shadow">Cancel</button>
+                        <button onClick={handleCancel} className="px-6 py-2.5 bg-gray-500 text-white rounded-md font-jakarta shadow hover:bg-gray-600 transition-colors">Cancel</button>
                       </>
                     ) : (
-                      <button onClick={() => setIsEditing(true)} className="px-4 py-2 bg-enrollmate-green text-white rounded-md font-jakarta font-semibold shadow">Edit Profile</button>
+                      <button onClick={() => setIsEditing(true)} className="px-6 py-2.5 bg-enrollmate-green text-white rounded-md font-jakarta font-semibold shadow hover:shadow-md transition-all hover:scale-[1.02]">Edit Profile</button>
                     )}
-                    <button onClick={() => setIsChangingPassword(true)} className="px-4 py-2 bg-white border border-gray-200 text-gray-800 rounded-md font-jakarta shadow">Change Password</button>
-                    <button onClick={() => alert('Deactivate account not implemented')} className="px-4 py-2 bg-red-600 text-white rounded-md font-jakarta shadow">Deactivate Account</button>
+                    <button onClick={() => setIsChangingPassword(true)} className="px-6 py-2.5 bg-white border border-gray-200 text-gray-800 rounded-md font-jakarta shadow hover:bg-gray-50 transition-colors">Change Password</button>
+                    <button onClick={() => alert('Deactivate account not implemented')} className="px-6 py-2.5 bg-red-600 text-white rounded-md font-jakarta shadow hover:bg-red-700 transition-colors">Deactivate Account</button>
                   </div>
                 </div>
               </div>
