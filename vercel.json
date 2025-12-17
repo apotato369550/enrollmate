@@ -3,11 +3,6 @@
   "outputDirectory": ".next",
   "installCommand": "npm ci",
   "framework": "nextjs",
-  "env": {
-    "NEXT_PUBLIC_SUPABASE_API": "@supabase_api_url",
-    "NEXT_PUBLIC_PUBLIC_API_KEY": "@supabase_anon_key",
-    "SUPABASE_SERVICE_ROLE_KEY": "@supabase_service_role_key"
-  },
   "regions": [
     "iad1"
   ],

@@ -2,7 +2,6 @@
 const nextConfig = {
   // Optimize production build
   productionBrowserSourceMaps: false, // Reduce bundle size
-  optimizeFonts: true,
   compress: true,
 
   async headers() {
