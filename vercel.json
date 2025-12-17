@@ -17,10 +17,6 @@
       "memory": 1024
     }
   },
-  "buildOutputAnalysis": {
-    "enabled": true,
-    "showDetails": true
-  },
   "headers": [
     {
       "source": "/:path((?!api).*)*",
