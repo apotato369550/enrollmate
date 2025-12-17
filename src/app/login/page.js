@@ -58,22 +58,46 @@ export default function LoginPage() {
 
     setLoading(true);
     try {
+      console.log('Attempting login with:', formData.email);
+
       const { data, error } = await supabase.auth.signInWithPassword({
         email: formData.email,
         password: formData.password,
       });
 
+      console.log('Login response:', { data, error });
+
       if (error) {
-        setErrors({ general: error.message });
+        console.error('Login error:', error);
+
+        // Handle specific error cases
+        let errorMessage = error.message;
+        if (error.message.includes('fetch')) {
+          errorMessage = 'Network error: Unable to connect to authentication server. Please check your internet connection.';
+        } else if (error.message === 'Invalid login credentials') {
+          errorMessage = 'Invalid email or password. Please try again.';
+        } else if (error.message.includes('Email not confirmed')) {
+          errorMessage = 'Please verify your email address before logging in.';
+        }
+
+        setErrors({ general: errorMessage });
         return;
       }
 
       if (data.user) {
+        console.log('Login successful, redirecting to dashboard');
         // Redirect to dashboard
         router.push('/dashboard');
       }
     } catch (err) {
-      setErrors({ general: 'An unexpected error occurred. Please try again.' });
+      console.error('Unexpected error during login:', err);
+
+      let errorMessage = 'An unexpected error occurred. Please try again.';
+      if (err.message.includes('fetch') || err.name === 'TypeError') {
+        errorMessage = 'Network error: Unable to connect to server. Please check your internet connection and try again.';
+      }
+
+      setErrors({ general: errorMessage });
     } finally {
       setLoading(false);
     }
