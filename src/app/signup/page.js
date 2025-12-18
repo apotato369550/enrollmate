@@ -102,19 +102,6 @@ export default function SignupPage() {
       }
 
       if (data.user) {
-        // If no session, try to sign in the user
-        if (!data.session) {
-          const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
-            email: formData.email,
-            password: formData.password,
-          });
-
-          if (signInError) {
-            setErrors({ general: 'Account created but sign in failed. Please check your email for confirmation or try logging in.' });
-            return;
-          }
-        }
-
         // Insert into profiles table
         const { error: profileError } = await supabase
           .from('profiles')
@@ -132,8 +119,8 @@ export default function SignupPage() {
           return;
         }
 
-        // Redirect to dashboard
-        router.push('/dashboard');
+        // Redirect to login page with success message
+        router.push('/login?accountCreated=true');
       }
     } catch (err) {
       setErrors({ general: 'An unexpected error occurred. Please try again.' });
