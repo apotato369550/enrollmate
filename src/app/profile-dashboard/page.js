@@ -106,8 +106,8 @@ export default function ProfileDashboard() {
               <div className="lg:col-span-1 flex flex-col items-center">
                 <div className="relative">
                   <div className="w-48 h-48 md:w-64 md:h-64 lg:w-72 lg:h-72 rounded-full overflow-hidden border-4 border-[#A2A2A2] shadow-xl">
-                    <img 
-                      src="/assets/images/default-avatar.png"
+                    <img
+                      src={profile?.avatar_url || '@public/assets/images/default-avatar.png'}
                       alt="Profile Picture"
                       className="w-full h-full object-cover"
                     />
