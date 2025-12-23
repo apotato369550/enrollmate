@@ -183,7 +183,7 @@ function CourseInputPanel({ courses, setCourses, currentUser }) {
     }
   };
 
-  const addCourse = () => {
+  const addCourse = async () => {
     if (newCourse.courseCode && newCourse.courseName && newCourse.sections.length > 0) {
       // Validate sections have required fields
       const validSections = newCourse.sections.filter(s => s.schedule && s.enrolled);
@@ -194,6 +194,31 @@ function CourseInputPanel({ courses, setCourses, currentUser }) {
           courseName: newCourse.courseName,
           sections: validSections
         }]);
+
+        // Save to user's course library if logged in
+        if (currentUser) {
+          try {
+            const coursesToSave = validSections.map(section => {
+              const [current, total] = section.enrolled.split('/').map(n => parseInt(n.trim()) || 0);
+              return {
+                courseCode: newCourse.courseCode,
+                courseName: newCourse.courseName,
+                sectionGroup: parseInt(section.group) || 1,
+                schedule: section.schedule,
+                enrolledCurrent: current,
+                enrolledTotal: total || 30,
+                room: null,
+                instructor: null
+              };
+            });
+
+            await UserCourseAPI.saveCourses(currentUser.id, coursesToSave, 'manual');
+            console.log(`✅ Saved ${coursesToSave.length} manually added courses to library`);
+          } catch (error) {
+            console.error('Failed to save manually added courses:', error);
+            // Don't block UI, just log error
+          }
+        }
 
         // Reset form
         setNewCourse({
@@ -1469,6 +1494,28 @@ export default function SchedulerPage() {
         constraints
       );
 
+      // Save courses to user's library
+      const coursesToSave = schedule.selections.map(section => {
+        const [current, total] = section.enrolled.split('/').map(n => parseInt(n.trim()) || 0);
+        return {
+          courseCode: section.courseCode,
+          courseName: section.courseName,
+          sectionGroup: parseInt(section.group) || 1,
+          schedule: section.schedule,
+          enrolledCurrent: current,
+          enrolledTotal: total || 30,
+          room: section.room || null,
+          instructor: section.instructor || null
+        };
+      });
+
+      try {
+        await UserCourseAPI.saveCourses(currentUser.id, coursesToSave, 'manual');
+        console.log(`✅ Saved ${coursesToSave.length} courses from private schedule to library`);
+      } catch (error) {
+        console.error('Failed to save courses to library:', error);
+      }
+
       setMessage(`✅ Schedule "${scheduleName}" saved privately!`);
 
       // Refresh saved schedules list if on saved tab
@@ -1567,6 +1614,28 @@ export default function SchedulerPage() {
           console.error(`Failed to add ${section.courseCode}:`, err.message);
           errorCount++;
         }
+      }
+
+      // Save courses to user's library
+      const coursesToSave = schedule.selections.map(section => {
+        const [current, total] = section.enrolled.split('/').map(n => parseInt(n.trim()) || 0);
+        return {
+          courseCode: section.courseCode,
+          courseName: section.courseName,
+          sectionGroup: parseInt(section.group) || 1,
+          schedule: section.schedule,
+          enrolledCurrent: current,
+          enrolledTotal: total || 30,
+          room: section.room || null,
+          instructor: section.instructor || null
+        };
+      });
+
+      try {
+        await UserCourseAPI.saveCourses(currentUser.id, coursesToSave, 'manual');
+        console.log(`✅ Saved ${coursesToSave.length} courses from semester schedule to library`);
+      } catch (error) {
+        console.error('Failed to save courses to library:', error);
       }
 
       // Better success message
