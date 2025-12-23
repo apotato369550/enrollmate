@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { SemesterAPI } from '@/lib/api/semesterAPI.js'; // Assuming this exists or mocking behavior
+import { SemesterAPI } from '@lib/api/semesterAPI.js'; // Assuming this exists or mocking behavior
 import { supabase } from '@/lib/supabase';
 
 // Since SemesterAPI might not be fully implemented or we need to mock it

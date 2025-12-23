@@ -43,6 +43,8 @@ export default function Profile() {
           year_level: profile?.year_level || '',
           contact_number: profile?.contact_number || '',
         });
+      } else {
+        router.push('/login');
       }
       setLoading(false);
     };

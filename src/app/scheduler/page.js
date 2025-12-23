@@ -6,6 +6,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { Section, ScheduleGenerator, ConflictDetector } from '../../../lib/scheduler/SchedulerEngine.js';
 import { saveUserSchedule, fetchUserSchedules, deleteUserSchedule } from '../../../lib/scheduler/schedulerAPI.js';
 import { supabase } from '../../../src/lib/supabase.js';
@@ -1432,11 +1433,19 @@ export default function SchedulerPage() {
     }
   };
 
+  const router = useRouter();
+
   // Fetch current user and semester on mount
   useEffect(() => {
     const loadUserAndSemester = async () => {
       try {
         const { data: { user } } = await supabase.auth.getUser();
+        
+        if (!user) {
+          router.push('/login');
+          return;
+        }
+
         setCurrentUser(user);
 
         if (user) {

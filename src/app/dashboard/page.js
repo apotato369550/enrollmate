@@ -51,6 +51,8 @@ export default function Dashboard() {
 
         // Load current semester
         await loadCurrentSemester(user.id);
+      } else {
+        router.push('/login');
       }
       setLoading(false);
     };

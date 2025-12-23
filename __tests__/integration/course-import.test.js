@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import UserCourseAPI from '@/lib/api/userCourseAPI.js';
+import UserCourseAPI from '@lib/api/userCourseAPI.js';
 import { supabase } from '@/lib/supabase';
 import { computerscienceCourses } from '../fixtures/sample-courses.js';
 
@@ -13,73 +13,62 @@ describe('Integration: Course Import Workflow', () => {
     it('should bulk import courses and allow searching them', async () => {
         // Setup mocks for UserCourseAPI usage
         
-        // 1. Bulk Save
         const mockInsert = vi.fn().mockReturnValue({
             select: vi.fn().mockReturnValue({
                 single: vi.fn().mockResolvedValue({ data: { id: 'new-course', ...computerscienceCourses[0] }, error: null })
             })
         });
         
-        const mockSelect = vi.fn();
+        const mockSelect = vi.fn(); // The function returned by supabase.from()
         
         supabase.from.mockReturnValue({
             select: mockSelect,
             insert: mockInsert
         });
-        
-        // Mocking count check for loop
-        mockSelect.mockReturnValue({
-            eq: vi.fn().mockResolvedValue({ count: 10, error: null }),
-             // nested mocks for "existing check" inside API are complex, 
-             // relying on API unit test for logic, here we test the flow
-             eq: vi.fn().mockReturnValue({
-                 eq: vi.fn().mockReturnValue({
-                     maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null })
-                 })
-             })
-        });
 
-        // This integration test is slightly brittle due to the specific implementation of UserCourseAPI
-        // relying on sequential await calls. Ideally we'd use a real DB or a smarter mock.
-        // For the purpose of "completing the plan", we'll verify the API method is callable and hits the mock.
-        
-        // We need to ensure the `maybeSingle` (existing check) doesn't crash the loop
-        // The mock above tries to handle it.
-        
-        // Let's redefine mock to handle the specific chain in saveCourse:
-        // .select('id').eq(...).eq(...).maybeSingle()
-        
-        const selectChain = {
-            eq: vi.fn().mockReturnThis(),
-            maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null }),
-            order: vi.fn().mockResolvedValue({ data: [computerscienceCourses[0]], error: null }), // for search
-            or: vi.fn().mockReturnThis() // for search
-        };
-        
-        // Handle count
-        selectChain.eq.mockImplementation((field) => {
-             if (field === 'user_id') return Promise.resolve({ count: 5, error: null });
-             return selectChain;
+        // Smart mock for select()
+        mockSelect.mockImplementation((columns, options) => {
+            // 1. Handle Count Query: select('id', { count: 'exact' })
+            if (options && options.count === 'exact') {
+                return {
+                    eq: vi.fn().mockResolvedValue({ count: 5, error: null })
+                };
+            }
+            
+            // 2. Handle Existing Check: select('id') -> .eq().eq().eq().maybeSingle()
+            if (columns === 'id') {
+                return {
+                    eq: vi.fn().mockReturnValue({
+                        eq: vi.fn().mockReturnValue({
+                            eq: vi.fn().mockReturnValue({
+                                maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null })
+                            })
+                        })
+                    })
+                };
+            }
+            
+            // 3. Handle Search: select('*') -> .eq().or().order()
+            return {
+                eq: vi.fn().mockReturnValue({
+                    or: vi.fn().mockReturnValue({
+                        order: vi.fn().mockResolvedValue({ data: [computerscienceCourses[0]], error: null })
+                    })
+                })
+            };
         });
-
-        mockSelect.mockReturnValue(selectChain);
 
         // Run Import
         const importResult = await UserCourseAPI.saveCourses(userId, [computerscienceCourses[0]], 'csv');
+        
+        // Debug output if failure continues
+        if (importResult.success.length === 0) {
+            console.error('Import failed with errors:', importResult.errors);
+        }
+        
         expect(importResult.success.length).toBe(1);
 
         // Run Search
-        // API calls: .from('user_courses').select('*').eq('user_id', userId).or(...).order(...)
-        
-        // Reset mock for search
-        mockSelect.mockReturnValue({
-            eq: vi.fn().mockReturnValue({
-                or: vi.fn().mockReturnValue({
-                    order: vi.fn().mockResolvedValue({ data: [computerscienceCourses[0]], error: null })
-                })
-            })
-        });
-
         const searchResults = await UserCourseAPI.searchCourses(userId, 'CIS');
         expect(searchResults.length).toBe(1);
         expect(searchResults[0].courseCode).toBe('CIS 3100');

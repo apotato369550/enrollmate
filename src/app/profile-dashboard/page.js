@@ -32,6 +32,8 @@ export default function ProfileDashboard() {
           .eq('id', user.id)
           .single();
         setProfile(profile);
+      } else {
+        router.push('/login');
       }
       setLoading(false);
     };

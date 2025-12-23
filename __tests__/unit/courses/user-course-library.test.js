@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import UserCourseAPI from '@lib/api/userCourseAPI.js';
-import { supabase } from '../../src/lib/supabase.js'; // Use the mocked supabase
+import { supabase } from '@/lib/supabase.js'; // Use the mocked supabase
 import { testUser1 } from '../../fixtures/sample-users.js';
 import { computerscienceCourses } from '../../fixtures/sample-courses.js';
 
@@ -74,7 +74,9 @@ describe('User Course Library API', () => {
       selectMock.mockReturnValueOnce({
           eq: vi.fn().mockReturnValue({
               eq: vi.fn().mockReturnValue({
-                  maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null })
+                  eq: vi.fn().mockReturnValue({
+                      maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null })
+                  })
               })
           })
       });
@@ -146,7 +148,9 @@ describe('User Course Library API', () => {
           selectMock.mockReturnValueOnce({
               eq: vi.fn().mockReturnValue({
                   eq: vi.fn().mockReturnValue({
-                      maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null })
+                      eq: vi.fn().mockReturnValue({
+                          maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null })
+                      })
                   })
               })
           });

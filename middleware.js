@@ -65,11 +65,13 @@ export async function middleware(request) {
     }
   }
 
-  // Protect dashboard and profile routes
-  if (
-    request.nextUrl.pathname.startsWith('/dashboard') ||
-    request.nextUrl.pathname.startsWith('/profile')
-  ) {
+  // Protect dashboard, profile, and scheduler routes
+  const protectedPaths = ['/dashboard', '/profile', '/scheduler', '/profile-dashboard']
+  const isProtected = protectedPaths.some((path) =>
+    request.nextUrl.pathname.startsWith(path)
+  )
+
+  if (isProtected) {
     if (!session) {
       return NextResponse.redirect(new URL('/login', request.url))
     }
@@ -79,5 +81,11 @@ export async function middleware(request) {
 }
 
 export const config = {
-  matcher: ['/', '/dashboard/:path*', '/profile/:path*'],
+  matcher: [
+    '/',
+    '/dashboard/:path*',
+    '/profile/:path*',
+    '/scheduler/:path*',
+    '/profile-dashboard/:path*',
+  ],
 }
