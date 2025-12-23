@@ -5,7 +5,15 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start"
+    "start": "next start",
+    "test": "vitest",
+    "test:watch": "vitest --watch",
+    "test:ui": "vitest --ui",
+    "test:coverage": "vitest --coverage",
+    "test:auth": "vitest __tests__/unit/auth",
+    "test:schedules": "vitest __tests__/unit/schedules",
+    "test:integration": "vitest __tests__/integration",
+    "test:e2e": "vitest __tests__/e2e"
   },
   "dependencies": {
     "@supabase/ssr": "^0.7.0",
@@ -18,6 +26,16 @@
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
-    "tailwindcss": "^4"
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.1",
+    "@testing-library/user-event": "^14.6.1",
+    "@vitejs/plugin-react": "^5.1.2",
+    "@vitest/ui": "^4.0.16",
+    "csv-parse": "^6.1.0",
+    "dotenv": "^17.2.3",
+    "jsdom": "^27.3.0",
+    "supertest": "^7.1.4",
+    "tailwindcss": "^4",
+    "vitest": "^4.0.16"
   }
 }

@@ -60,6 +60,7 @@ node migrations/apply-migration.js migrations/001_create_scheduler_tables.sql
 node migrations/apply-migration.js migrations/002_create_semester_architecture.sql
 node migrations/apply-migration.js migrations/003_fix_cascade_delete.sql
 node migrations/apply-migration.js migrations/004_private_schedules_and_saved_courses.sql
+node migrations/apply-migration.js migrations/005_create_profiles_table.sql
 ```
 
 ### Run Development Server
@@ -229,6 +230,27 @@ Automatic time conflict detection when adding courses to schedules:
 - Checks for day overlap (M, T, W, Th, F, S, Su)
 - Checks for time overlap using 30-minute intervals
 
+### Scheduler Algorithm & The University Timetabling Problem
+
+The core of Enrollmate's scheduling capability lies in `lib/scheduler/SchedulerEngine.js`, which addresses a variant of the **University Timetabling Problem**. This is a classic Constraint Satisfaction Problem (CSP) where the goal is to assign events (classes) to resources (time slots) without violating constraints.
+
+**How it Works:**
+
+1.  **Parsing & Standardization**:
+    - The `StandardScheduleParser` converts human-readable schedule strings (e.g., "MW 10:00 AM - 11:30 AM") into a standardized numerical format (minutes from midnight).
+
+2.  **Constraint Satisfaction via Backtracking**:
+    - The `ScheduleGenerator` class implements a **Backtracking Algorithm** to explore possible schedule combinations.
+    - **Input**: A list of courses, where each course has multiple available sections.
+    - **Process**:
+        - It treats the schedule generation as a tree where each level represents a course and each branch represents a specific section choice.
+        - It recursively selects a section for the current course.
+        - **Pruning**: Before moving deeper, it checks for **Time Conflicts** using `ConflictDetector`. If the selected section overlaps with any already selected section, that branch is "pruned" (abandoned) immediately.
+        - It also respects user-defined constraints (filters) like "No classes before 10 AM" or "Avoid full sections" during this process.
+    - **Output**: A list of valid, non-conflicting schedule permutations that satisfy all hard and soft constraints.
+
+This approach ensures that users are presented with every possible valid schedule configuration for their chosen courses, solving the "Student Sectioning" sub-problem of university timetabling.
+
 ---
 
 ## Development
@@ -266,6 +288,47 @@ See `CHANGELOG.md` for recent changes.
 ---
 
 ## Testing
+
+Enrollmate includes a comprehensive testing suite using **Vitest**.
+
+### Running Tests
+
+```bash
+# Run all tests
+npm test
+
+# Run in watch mode (interactive)
+npm run test:watch
+
+# View visual UI dashboard
+npm run test:ui
+
+# Generate coverage report
+npm run test:coverage
+```
+
+### Specific Suites
+
+```bash
+# Auth tests
+npm run test:auth
+
+# Schedule domain tests
+npm run test:schedules
+
+# Integration workflows
+npm run test:integration
+
+# End-to-end scenarios
+npm run test:e2e
+```
+
+### Test Structure
+
+- `__tests__/unit/`: Logic tests for API, Auth, and Domain models
+- `__tests__/integration/`: Workflow tests (Auth flow, Schedule creation)
+- `__tests__/e2e/`: Full user journey simulations
+- `__tests__/fixtures/`: Sample data (Users, Courses, Semesters)
 
 ### Manual Testing
 
